@@ -1,1 +1,0 @@
-../competition-templates/Java/Solution.java
