@@ -307,5 +307,5 @@ build-iPhoneSimulator/
 # End of https://www.gitignore.io/api/c++,java,ruby,scala,emacs,macos,python
 
 ### ###
-Main.java
-main.py
+./Main.java
+./main.py

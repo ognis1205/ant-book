@@ -1,0 +1,1 @@
+../competition-templates/Python/main.py

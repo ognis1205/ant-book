@@ -1,0 +1,1 @@
+../competition-templates/Java/Main.java
