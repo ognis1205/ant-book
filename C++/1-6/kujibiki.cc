@@ -37,15 +37,13 @@ using namespace std;
 #define STR(args...) #args
 #define CAT(x, y) x ## y
 #define MEMSET(x, y) memset(x, (y), sizeof(x))
-#define MP make_pair
-#define PB push_back
 #define FOR(i, j, k, inc) for (i64 i = j; i < k; i += inc)
 #define RFOR(i, j, k, dec) for (i64 i = j; i >= k; i -= dec)
 #define REP(i, j) FOR(i, 0, j, 1)
 #define RREP(i, j) RFOR(i, j, 0, 1)
 #define ALL(cont) cont.begin(), cont.end()
 #define RALL(cont) cont.end(), cont.begin()
-#define FOREACH(it, l) for (auto it = l.begin(); it != l.end(); it++)
+#define FOREACH(it, cont) for (auto it = cont.begin(); it != cont.end(); it++)
 #define ASSERT(expr...) assert((expr))
 #define IN(x, y, z) y <= x && x <= z
 
@@ -89,8 +87,9 @@ inline i64 SizeOf(const T (&t)[N]) {
 }
 
 /*
- * StoX and XtoS Functions.
+ * Templates of Simple Debugging Operations.
  */
+#ifdef LOCAL
 inline string to_string(char c) {
   return "'" + string({c}) + "'";
 }
@@ -117,23 +116,19 @@ inline string to_string(const bitset<N>& bs) {
   return to_string(ret);
 }
 
-template<typename T>
-inline string to_string(const T& t);
+template<typename Iterator>
+inline string to_string(const Iterator& cont);
 
 template<typename T, typename U>
 inline string to_string(const pair<T, U>& p) {
   return "(" + to_string(p.first) + ", " + to_string(p.second) + ")";
 }
 
-template<typename T>
-inline string to_string(const T& t) {
-  i64 start = 0, end = kInf;
+template<typename Iterator>
+inline string to_string(const Iterator& cont) {
   string ret = "[";
-  auto cur = begin(t);
-  advance(cur, min(start, SizeOf(t)));
-  for(i64 i = min(start, SizeOf(t)), j = min(end, SizeOf(t) - 1); i <= j; ++i) {
-    ret += to_string(*cur) + (i != j ? ", " : "");
-    cur = next(cur);
+  for (auto it = begin(cont); it != end(cont); it++) {
+    ret += to_string(*it) + (next(it) != end(cont) ? ", " : "");
   }
   return ret + "]";
 }
@@ -160,18 +155,6 @@ inline string to_string(const tuple<Ts...>& t) {
   return "(" + PrintTuple<Size - 1, Ts...>{}(t) + ")";
 }
 
-template <typename T>
-inline T from_string(const string& s) {
-  T ret;
-  stringstream ss(s);
-  ss >> ret;
-  return ret;
-}
-
-/*
- * Debugging Class Template.
- */
-#ifdef LOCAL
 void Debug() {}
 
 template<typename Head, typename... Tails>
@@ -204,6 +187,9 @@ struct Init {
   }
 } INIT;
 
+/*
+ * IO Helper Functions.
+ */
 inline void SetStdin(string s) {
   freopen(s.c_str(), "r", stdin);
 }
@@ -212,9 +198,14 @@ inline void SetStdout(string s) {
   freopen(s.c_str(), "w", stdout);
 }
 
-/*
- * User-defined Functions and Variables.
- */
+template <typename T>
+inline T FromString(const string& s) {
+  T ret;
+  stringstream ss(s);
+  ss >> ret;
+  return ret;
+}
+
 struct NoOp {
   template<typename T>
   constexpr auto operator()(T&& t) const noexcept -> decltype(forward<T>(t)) {
@@ -222,47 +213,93 @@ struct NoOp {
   }
 };
 
-struct Trim {
-  string operator()(const string& s, const string& whitespace=" \n\r\t\f\v") const {
-    const auto from = s.find_first_not_of(whitespace);
-    if (from == string::npos) return "";
-    const auto to = s.find_last_not_of(whitespace);
-    const auto length = to - from + 1;
-    return s.substr(from, length);
+template <typename... Ts>
+struct AppendOp;
+
+template <typename... Ts>
+struct AppendOp<vector<Ts...>> {
+  using Container = vector<Ts...>;
+  template <typename... Args>
+  static void apply(Container& cont, Args&&... args) {
+    cont.emplace_back(forward<Args>(args)...);
   }
 };
 
-template<typename T, class Preprocess=NoOp>
-void SplitAs(const string& line,
-             char delimiter,
-             vector<T>& result,
-             Preprocess&& preprocess=Preprocess()) {
-  stringstream ss(line);
-  string token;
-  while (getline(ss, token, delimiter)) {
-    result.push_back(from_string<T>(preprocess(token)));
+template <typename... Ts>
+struct AppendOp<list<Ts...>> {
+  using Container = list<Ts...>;
+  template <typename... Args>
+  static void apply(Container& cont, Args&&... args) {
+    cont.emplace_back(forward<Args>(args)...);
   }
+};
+
+template <typename... Ts>
+struct AppendOp<set<Ts...>> {
+  using Container = set<Ts...>;
+  template <typename... Args>
+  static void apply(Container& cont, Args&&... args) {
+    cont.insert(cont.end(), {forward<Args>(args)...});
+  }
+};
+
+template <typename Container, typename... Args>
+void Append(Container& cont, Args&&... args) {
+  AppendOp<Container>::apply(cont, forward<Args>(args)...);
 }
 
+template<typename T, typename Container, typename Preprocess>
+struct SplitAsManip {
+  SplitAsManip(Container& cont,
+               char delim,
+               Preprocess& prep) : cont_(cont), delim_(delim), prep_(prep) {}
+  void operator()(istream& in) {
+    string token;
+    while (getline(in, token, delim_)) {
+      Append(cont_, FromString<T>(prep_(token)));
+    }
+  }
+ private:
+  Container& cont_;
+  char delim_;
+  Preprocess& prep_;
+};
+
+template<typename T, typename Container, typename Preprocess=NoOp>
+SplitAsManip<T, Container, Preprocess> SplitAs(Container& cont,
+                                               char delim,
+                                               Preprocess&& prep=Preprocess()) {
+  return SplitAsManip<T, Container, Preprocess>(cont, delim, prep);
+}
+
+template<typename T, typename Container, typename Preprocess>
+istream& operator>>(istream& in, SplitAsManip<T, Container, Preprocess> manip) {
+  manip(in);
+  return in;
+}
+
+/*
+ * User-defined Functions and Variables.
+ */
 template<typename Order>
-struct NonStrict : public binary_function<typename Order::second_argument_type,
-                                          typename Order::first_argument_type,
-                                          bool> {
-  NonStrict(Order o) : order(o) {}
+struct NonStrictOp : public binary_function<typename Order::second_argument_type,
+                                            typename Order::first_argument_type,
+                                            bool> {
+  NonStrictOp(Order o) : order_(o) {}
   bool operator()(typename Order::second_argument_type lhs,
                   typename Order::first_argument_type rhs) const {
-    return !order(rhs, lhs);
+    return !order_(rhs, lhs);
   }
-private:
-  Order order;
+ private:
+  Order order_;
 };
 
 template<typename Order>
-NonStrict<Order> ToNonStrict(Order o) {
-  return NonStrict<Order>(o);
+NonStrictOp<Order> NonStrict(Order o) {
+  return NonStrictOp<Order>(o);
 }
 
-template<class RandomAccessIterator, class Predicate>
+template<typename RandomAccessIterator, typename Predicate>
 RandomAccessIterator Partition(RandomAccessIterator begin,
                                RandomAccessIterator end,
                                Predicate&& predicate) {
@@ -276,19 +313,19 @@ RandomAccessIterator Partition(RandomAccessIterator begin,
   return ret;
 }
 
-template<class RandomAccessIterator, class Order>
+template<typename RandomAccessIterator, typename Order>
 void Sort(RandomAccessIterator begin, RandomAccessIterator end, Order order) {
   if (begin < end) {
     typedef typename iterator_traits<RandomAccessIterator>::value_type ValueType;
     ValueType pivot = *(begin + (end - begin) / 2);
     RandomAccessIterator l = Partition(begin, end, [pivot, order](ValueType& v) { return order(v, pivot) ? true : false; });
-    RandomAccessIterator r = Partition(l, end, [pivot, order](ValueType& v) { return ToNonStrict(order)(v, pivot) ? true : false; });
+    RandomAccessIterator r = Partition(l, end, [pivot, order](ValueType& v) { return NonStrict(order)(v, pivot) ? true : false; });
     Sort(begin, l, order);
     Sort(r, end, order);
   }
 }
 
-template<class RandomAccessIterator>
+template<typename RandomAccessIterator>
 bool Search(RandomAccessIterator begin,
             RandomAccessIterator end,
             typename iterator_traits<RandomAccessIterator>::value_type t) {
@@ -308,11 +345,10 @@ void Solve(i64 n, i64 m, const vector<i64>& k) {
   vector<i64> kk;
   FOR (i, 0, n, 1) {
     FOR (j, i, n, 1) {
-      kk.PB(k[i] + k[j]);
+      kk.push_back(k[i] + k[j]);
     }
   }
   Sort(kk.begin(), kk.end(), less<i64>());
-  DBG(kk);
 
   REP (i, n) {
     REP (j, n) {
@@ -338,16 +374,14 @@ int main(int argc, char* argv[]) {
 
   i64 n, m;
   vector<i64> k;
-  cin >> n >> m;
-  SplitAs<i64>([](){ string l; cin >> l; return l; }(), ',', k);
+  cin >> n >> m >> SplitAs<i64>(k, ',');
 
   ASSERT(IN(n, 1, 50));
   ASSERT(IN(m, 1, 1e8));
   ASSERT(n == SizeOf(k));
   FOREACH (it, k) ASSERT(IN(*it, 1, 1e8));
-  DBG(n, m);
-  DBG(k);
 
+  DBG(n, m, k);
   Solve(n, m, k);
 
   return 0;
