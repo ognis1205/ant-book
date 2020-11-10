@@ -274,85 +274,16 @@ void Debug(Head h, Tail... ts) {
 /*
  * User-defined Functions and Variables.
  */
-template<typename Order>
-struct NonStrictOp : public binary_function<typename Order::second_argument_type,
-                                            typename Order::first_argument_type,
-                                            bool> {
-  NonStrictOp(Order o) : order_(o) {}
-  bool operator()(typename Order::second_argument_type lhs,
-                  typename Order::first_argument_type rhs) const {
-    return !order_(rhs, lhs);
+void Solve(i64 L, i64 n, vector<i64>& x) {
+  vector<i64> rs;
+  i64 minimum = 0;
+  i64 maximum = 0;
+  FOREACH (it, x) {
+    AMax(&maximum, max(*it, L - *it));
+    AMax(&minimum, min(*it, L - *it));
   }
- private:
-  Order order_;
-};
-
-template<typename Order>
-NonStrictOp<Order> NonStrict(Order o) {
-  return NonStrictOp<Order>(o);
-}
-
-template<typename RandomAccessIterator, typename Predicate>
-RandomAccessIterator Partition(RandomAccessIterator begin,
-                               RandomAccessIterator end,
-                               Predicate&& predicate) {
-  RandomAccessIterator ret = begin;
-  for (auto it = begin; it != end; it++) {
-    if (predicate(*it)) {
-      if (it != ret) iter_swap(it, ret);
-      ret++;
-    }
-  }
-  return ret;
-}
-
-template<typename RandomAccessIterator, typename Order>
-void Sort(RandomAccessIterator begin, RandomAccessIterator end, Order order) {
-  if (begin < end) {
-    typedef typename iterator_traits<RandomAccessIterator>::value_type ValueType;
-    ValueType pivot = *(begin + (end - begin) / 2);
-    RandomAccessIterator l = Partition(begin, end, [pivot, order](ValueType& v) { return order(v, pivot) ? true : false; });
-    RandomAccessIterator r = Partition(l, end, [pivot, order](ValueType& v) { return NonStrict(order)(v, pivot) ? true : false; });
-    Sort(begin, l, order);
-    Sort(r, end, order);
-  }
-}
-
-template<typename RandomAccessIterator>
-bool Search(RandomAccessIterator begin,
-            RandomAccessIterator end,
-            typename iterator_traits<RandomAccessIterator>::value_type t) {
-  RandomAccessIterator m = begin + (end - begin) / 2;
-  if (begin + 1 == end) {
-    return *begin == t;
-  } else if (*m < t) {
-    return Search(m + 1, end, t);
-  } else if (*m == t) {
-    return true;
-  } else {
-    return Search(begin, m - 1, t);
-  }
-}
-
-void Solve(i64 n, i64 m, const vector<i64>& k) {
-  vector<i64> kk;
-  FOR (i, 0, n, 1) {
-    FOR (j, i, n, 1) {
-      kk.push_back(k[i] + k[j]);
-    }
-  }
-  Sort(kk.begin(), kk.end(), less<i64>());
-
-  REP (i, n) {
-    REP (j, n) {
-      if (m < kk[i] + kk[j]) continue;
-      if (Search(kk.begin(), kk.end(), m - kk[i] - kk[j])) {
-        cout << "Yes" << endl;
-        return;
-      }
-    }
-  }
-  cout << "No" << endl;
+  cout << "min = " << minimum << endl;
+  cout << "max = " << maximum << endl;
 }
 
 /*
@@ -365,17 +296,16 @@ int main(int argc, char* argv[]) {
   }
   SetStdin(argv[1]);
 
-  i64 n, m;
-  vector<i64> k;
-  cin >> n >> m >> SplitAs<i64>(k, ',');
+  i64 L, n;
+  vector<i64> x;
+  cin >> L >> n >> SplitAs<i64>(x, ',');
 
-  ASSERT(IN(n, 1, 50));
-  ASSERT(IN(m, 1, 1e8));
-  ASSERT(n == SizeOf(k));
-  FOREACH (it, k) ASSERT(IN(*it, 1, 1e8));
+  ASSERT(IN(L, 1, 1e6));
+  ASSERT(IN(n, 1, 1e6));
+  ASSERT(n == SizeOf(x));
+  FOREACH (it, x) ASSERT(IN(*it, 0, L));
 
-  DBG(n, m, k);
-  Solve(n, m, k);
-
+  DBG(L, n, x);
+  Solve(L, n, x);
   return 0;
 }
