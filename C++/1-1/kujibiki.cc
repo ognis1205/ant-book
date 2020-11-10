@@ -1,8 +1,9 @@
 /*
- * Note: This template uses some c++11 functions , so you have to compile it with c++11 flag.
+ * Note: This template uses some c++11 functions, so you have to compile it with c++11 flag.
  *       Example:-   $ g++ -std=c++11 foo.cc
  *
- * Author : Shingo OKAWA
+ * Copyright (c) 2020-present, Shingo OKAWA.
+ * All rights reserved.
  */
 #include <iostream>
 #include <iomanip>
@@ -87,93 +88,6 @@ inline i64 SizeOf(const T (&t)[N]) {
 }
 
 /*
- * Templates of Simple Debugging Operations.
- */
-#ifdef LOCAL
-inline string to_string(char c) {
-  return "'" + string({c}) + "'";
-}
-
-inline string to_string(bool b) {
-  return b ? "true" : "false";
-}
-
-inline string to_string(const string& s) {
-  return '"' + s + '"';
-}
-
-inline string to_string(const char* cs) {
-  string ret(cs);
-  return to_string(ret);
-}
-
-template<size_t N>
-inline string to_string(const bitset<N>& bs) {
-  string ret = "";
-  for (i64 i = 0; i < SizeOf(bs); ++i) {
-    ret += bs[i] + '0';
-  }
-  return to_string(ret);
-}
-
-template<typename Container>
-inline string to_string(const Container& cont);
-
-template<typename T, typename U>
-inline string to_string(const pair<T, U>& p) {
-  return "(" + to_string(p.first) + ", " + to_string(p.second) + ")";
-}
-
-template<typename Container>
-inline string to_string(const Container& cont) {
-  string ret = "[";
-  for (auto it = begin(cont); it != end(cont); it++) {
-    ret += to_string(*it) + (next(it) != end(cont) ? ", " : "");
-  }
-  return ret + "]";
-}
-
-template<i64 Index, typename... Ts>
-struct PrintTuple {
-  string operator()(const tuple<Ts...>& t) const {
-    string ret = PrintTuple<Index - 1, Ts...>{}(t);
-    ret += (Index ? ", " : "");
-    return ret + to_string(get<Index>(t));
-  }
-};
-
-template<typename... Ts>
-struct PrintTuple<0, Ts...> {
-  string operator()(const tuple<Ts...>& t) const {
-    return to_string(get<0>(t));
-  }
-};
-
-template<typename... Ts>
-inline string to_string(const tuple<Ts...>& t) {
-  const auto Size = tuple_size<tuple<Ts...>>::value;
-  return "(" + PrintTuple<Size - 1, Ts...>{}(t) + ")";
-}
-
-void Debug() {}
-
-template<typename Head, typename... Tails>
-void Debug(Head h, Tails... ts) {
-  const auto Size = sizeof...(Tails);
-  cerr << to_string(h) << (Size  ? ", " : "");
-  Debug(ts...);
-}
-#  define VER(...) do {\
-                     cerr << "GCC version is " << __GNUC__ << "." << __GNUC_MINOR__ << "." << __GNUC_PATCHLEVEL__ << endl; \
-                     cerr << "C++ version is " << __cplusplus << endl;\
-                   } while (0)
-#  define DBG(...) cerr << "[DEBUG]\t" << #__VA_ARGS__ << ": "; Debug(__VA_ARGS__); cerr << endl;
-#else
-#  define VER(...)
-#  define DBG(...)
-#endif
-
-/*
  * Initialization Settings.
  */
 struct Init {
@@ -190,55 +104,44 @@ struct Init {
 /*
  * IO Helper Functions.
  */
-inline void SetStdin(string s) {
+inline void SetStdin(const string& s) {
   freopen(s.c_str(), "r", stdin);
 }
 
-inline void SetStdout(string s) {
+inline void SetStdout(const string& s) {
   freopen(s.c_str(), "w", stdout);
 }
 
-template <typename T>
-inline T FromString(const string& s) {
-  T ret;
-  stringstream ss(s);
-  ss >> ret;
-  return ret;
+struct has_emplace_back {
+  template<typename T>
+  static auto check(T&& t) -> decltype(t.emplace_back(), true_type {});
+  template<typename T>
+  static auto check(...) -> false_type;
+};
+
+struct has_emplace {
+  template<typename T>
+  static auto check(T&& t) -> decltype(t.emplace(), true_type {});
+  template<typename T>
+  static auto check(...) -> false_type;
+};
+
+template<typename T>
+struct is_sequence_container : public decltype(has_emplace_back::check<T>(declval<T>())) {};
+
+template<typename T>
+struct is_associative_container : public decltype(has_emplace::check<T>(declval<T>())) {};
+
+template<typename C, typename... Args>
+inline typename enable_if<is_sequence_container<C>::value, void>::type
+Append(C& cont, Args&&... args) {
+  cont.emplace_back(forward<Args>(args)...);
 }
 
-template <typename... Ts>
-struct AppendMeth;
-
-template <typename... Ts>
-struct AppendMeth<vector<Ts...>> {
-  using Container = vector<Ts...>;
-  template <typename... Args>
-  static void apply(Container& cont, Args&&... args) {
-    cont.emplace_back(forward<Args>(args)...);
-  }
-};
-
-template <typename... Ts>
-struct AppendMeth<list<Ts...>> {
-  using Container = list<Ts...>;
-  template <typename... Args>
-  static void apply(Container& cont, Args&&... args) {
-    cont.emplace_back(forward<Args>(args)...);
-  }
-};
-
-template <typename... Ts>
-struct AppendMeth<set<Ts...>> {
-  using Container = set<Ts...>;
-  template <typename... Args>
-  static void apply(Container& cont, Args&&... args) {
-    cont.insert(cont.end(), {forward<Args>(args)...});
-  }
-};
-
-template <typename Container, typename... Args>
-void Append(Container& cont, Args&&... args) {
-  AppendMeth<Container>::apply(cont, forward<Args>(args)...);
+template<typename C, typename... Args>
+inline typename enable_if<is_associative_container<C>::value, void>::type
+Append(C& cont, Args&&... args) {
+  cont.emplace(forward<Args>(args)...);
 }
 
 template<typename T, typename Container, typename Preprocess>
@@ -246,13 +149,17 @@ struct SplitAsManip {
   SplitAsManip(Container& cont,
                char delim,
                Preprocess& prep) : cont_(cont), delim_(delim), prep_(prep) {}
-  void operator()(istream& is) {
+  istream& operator()(istream& is) {
     string dsv, token;
     is >> dsv;
     stringstream ss(dsv);
     while (getline(ss, token, delim_)) {
-      Append(cont_, FromString<T>(prep_(token)));
+      T t;
+      stringstream ss(prep_(token));
+      ss >> t;
+      Append(cont_, t);
     }
+    return is;
   }
  private:
   Container& cont_;
@@ -275,10 +182,94 @@ SplitAsManip<T, Container, Preprocess> SplitAs(Container& cont,
 }
 
 template<typename T, typename Container, typename Preprocess>
-istream& operator>>(istream& is, SplitAsManip<T, Container, Preprocess> manip) {
-  manip(is);
-  return is;
+istream& operator>>(istream& is, SplitAsManip<T, Container, Preprocess>&& manip) {
+  return manip(is);
 }
+
+struct has_begin_end_empty {
+  template<typename T>
+  static auto check(T&& t) -> decltype(t.begin(), t.end(), t.empty(), true_type {});
+  template<typename T>
+  static auto check(...) -> false_type;
+};
+
+template<typename T>
+struct is_container : public decltype(has_begin_end_empty::check<T>(declval<T>())) {};
+
+template<typename T, typename U>
+ostream& operator<<(ostream& os, const pair<T, U>& p) noexcept;
+
+template<typename... Ts>
+ostream& operator<<(ostream& os, const tuple<Ts...>& t) noexcept;
+
+template<typename C,
+         typename enable_if<is_container<C>::value && !is_same<C, string>::value && !is_same<C, wstring>::value,
+                            nullptr_t>::type=nullptr>
+ostream& operator<<(ostream& os, const C& cont) noexcept {
+  os << "[";
+  for (auto it = begin(cont); it != end(cont); it++) {
+    os << *it << (next(it) != end(cont) ? ", " : "");
+  }
+  return os << "]";
+}
+
+template<typename T,
+         size_t N,
+         typename enable_if<!is_same<T, char>::value && !is_same<T, wchar_t>::value,
+                            nullptr_t>::type=nullptr>
+ostream& operator<<(ostream& os, const T (&arr)[N]) noexcept {
+  os << "[";
+  for (auto it = begin(arr); it != end(arr); it++) {
+    os << *it << (next(it) != end(arr) ? ", " : "");
+  }
+  return os << "]";
+}
+
+template<size_t Index=0, typename... Ts>
+inline typename enable_if<Index == sizeof...(Ts), void>::type
+CopyTuple(ostream& os, const tuple<Ts...>& t) noexcept {}
+
+template<size_t Index=0, typename... Ts>
+inline typename enable_if<Index < sizeof...(Ts), void>::type
+CopyTuple(ostream& os, const tuple<Ts...>& t) noexcept {
+  os << get<Index>(t) << (Index == sizeof...(Ts) - 1 ? "" : ", ");
+  CopyTuple<Index + 1, Ts...>(os, t);
+}
+
+template<typename... Ts>
+ostream& operator<<(ostream& os, const tuple<Ts...>& t) noexcept {
+  const auto Size = tuple_size<tuple<Ts...>>::value;
+  os << "(";
+  CopyTuple(os, t);
+  return os << ")";
+}
+
+template<typename T, typename U>
+ostream& operator<<(ostream& os, const pair<T, U>& p) noexcept {
+  return os << "(" << p.first << ", " << p.second << ")";
+}
+
+/*
+ * Macros of Simple Debugging Operations.
+ */
+#ifdef LOCAL
+void Debug() {}
+
+template<typename Head, typename... Tail>
+void Debug(Head h, Tail... ts) {
+  const auto Size = sizeof...(Tail);
+  cerr << h << (Size  ? ", " : "");
+  Debug(ts...);
+}
+#  define VER(...) do {\
+                     cerr << "GCC version is " << __GNUC__ << "." << __GNUC_MINOR__ << "." << __GNUC_PATCHLEVEL__ << endl; \
+                     cerr << "C++ version is " << __cplusplus << endl;\
+                   } while (0)
+#  define DBG(...) cerr << "[DEBUG]\t" << #__VA_ARGS__ << ": "; Debug(__VA_ARGS__); cerr << endl;
+#else
+#  define VER(...)
+#  define DBG(...)
+#endif
 
 /*
  * User-defined Functions and Variables.
