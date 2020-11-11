@@ -279,8 +279,8 @@ void Solve(i64 L, i64 n, vector<i64>& x) {
   i64 minimum = 0;
   i64 maximum = 0;
   FOREACH (it, x) {
-    AMax(&maximum, max(*it, L - *it));
-    AMax(&minimum, min(*it, L - *it));
+    maximum = max(maximum, max(*it, L - *it));
+    minimum = max(minimum, min(*it, L - *it));
   }
   cout << "min = " << minimum << endl;
   cout << "max = " << maximum << endl;
