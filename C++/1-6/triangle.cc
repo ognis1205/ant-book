@@ -42,9 +42,9 @@ using namespace std;
 #define RFOR(i, j, k, dec) for (i64 i = j; i >= k; i -= dec)
 #define REP(i, j) FOR(i, 0, j, 1)
 #define RREP(i, j) RFOR(i, j, 0, 1)
-#define ALL(cont) cont.begin(), cont.end()
-#define RALL(cont) cont.end(), cont.begin()
-#define FOREACH(it, cont) for (auto it = cont.begin(); it != cont.end(); it++)
+#define ALL(cont) begin(cont), end(cont)
+#define RALL(cont) end(cont), begin(cont)
+#define FOREACH(it, cont) for (auto it = begin(cont); it != end(cont); it++)
 #define ASSERT(expr...) assert((expr))
 #define IN(x, y, z) y <= x && x <= z
 
@@ -145,7 +145,8 @@ Append(C& cont, Args&&... args) {
 }
 
 template<typename T, typename Container, typename Preprocess>
-struct SplitAsManip {
+class SplitAsManip {
+ public:
   SplitAsManip(Container& cont,
                char delim,
                Preprocess& prep) : cont_(cont), delim_(delim), prep_(prep) {}
@@ -164,6 +165,25 @@ struct SplitAsManip {
  private:
   Container& cont_;
   char delim_;
+  Preprocess& prep_;
+};
+
+template<typename Container, typename Preprocess>
+class SplitAsManip<char, Container, Preprocess> {
+ public:
+  SplitAsManip(Container& cont,
+               char delim,
+               Preprocess& prep) : cont_(cont), prep_(prep) {}
+  istream& operator()(istream& is) {
+    string s;
+    is >> s;
+    for (i64 i = 0; i < s.size(); i++) {
+      Append(cont_, s[i]);
+	}
+    return is;
+  }
+ private:
+  Container& cont_;
   Preprocess& prep_;
 };
 

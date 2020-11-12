@@ -294,16 +294,18 @@ void Debug(Head h, Tail... ts) {
 /*
  * User-defined Functions and Variables.
  */
-void Solve(i64 L, i64 n, vector<i64>& x) {
-  vector<i64> rs;
-  i64 minimum = 0;
-  i64 maximum = 0;
-  FOREACH (it, x) {
-    maximum = max(maximum, max(*it, L - *it));
-    minimum = max(minimum, min(*it, L - *it));
+bool DFS(i64 k, const vector<i64>& a, i64 i=0) {
+  if (k < 0 || (i >= SizeOf(a) && k > 0)) return false;
+  if (k == 0) return true;
+  return DFS(k - a[i], a, i + 1) || DFS(k, a, i + 1);
+}
+
+void Solve(i64 k, const vector<i64>& a) {
+  if (DFS(k, a)) {
+    cout << "Yes" << endl;
+    return;
   }
-  cout << "min = " << minimum << endl;
-  cout << "max = " << maximum << endl;
+  cout << "No" << endl;
 }
 
 /*
@@ -316,16 +318,16 @@ int main(int argc, char* argv[]) {
   }
   SetStdin(argv[1]);
 
-  i64 L, n;
-  vector<i64> x;
-  cin >> L >> n >> SplitAs<i64>(x, ',');
+  i64 n, k;
+  vector<i64> a;
+  cin >> n >> SplitAs<i64>(a, ',') >> k;
 
-  ASSERT(IN(L, 1, 1e6));
-  ASSERT(IN(n, 1, 1e6));
-  ASSERT(n == SizeOf(x));
-  FOREACH (it, x) ASSERT(IN(*it, 0, L));
+  ASSERT(IN(n, 1, 20));
+  ASSERT(n == SizeOf(a));
+  FOREACH (it, a) ASSERT(IN(*it, -1e8, 1e8));
+  ASSERT(IN(k, -1e8, 1e8));
 
-  DBG(L, n, x);
-  Solve(L, n, x);
+  DBG(n, a, k);
+  Solve(k, a);
   return 0;
 }

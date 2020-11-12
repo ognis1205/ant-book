@@ -196,7 +196,7 @@ struct Skip {
 
 template<typename T, typename Container, typename Preprocess=Skip>
 SplitAsManip<T, Container, Preprocess> SplitAs(Container& cont,
-                                               char delim,
+                                               char delim=',',
                                                Preprocess&& prep=Preprocess()) {
   return SplitAsManip<T, Container, Preprocess>(cont, delim, prep);
 }
@@ -294,16 +294,39 @@ void Debug(Head h, Tail... ts) {
 /*
  * User-defined Functions and Variables.
  */
-void Solve(i64 L, i64 n, vector<i64>& x) {
-  vector<i64> rs;
-  i64 minimum = 0;
-  i64 maximum = 0;
-  FOREACH (it, x) {
-    maximum = max(maximum, max(*it, L - *it));
-    minimum = max(minimum, min(*it, L - *it));
+i64 N, M;
+char water='W', walked='*';
+vector<vector<char>> lake;
+const pair<i64, i64> ds[] = {{0, 1}, {1, 1}, {1, 0}, {1, -1}, {0, -1}, {-1, -1}, {-1, 0}, {-1, 1}};
+
+void BFS(i64 i, i64 j) {
+  queue<pair<i64, i64>> q;
+  q.push({i, j});
+  while (!q.empty()) {
+    auto cur = q.front();
+    for (auto d : ds) {
+      i64 x = cur.first + d.first;
+      i64 y = cur.second + d.second;
+      if (IN(x, 0, N - 1) && IN(y, 0, M - 1) && lake[x][y] == water) {
+        q.push({x, y});
+      }
+    }
+    lake[cur.first][cur.second] = walked;
+    q.pop();
   }
-  cout << "min = " << minimum << endl;
-  cout << "max = " << maximum << endl;
+}
+
+void Solve() {
+  i64 count = 0;
+  REP (i, N) {
+    REP (j, M) {
+      if (lake[i][j] == water) {
+        ++count;
+        BFS(i, j);
+      }
+    }
+  }
+  cout << count << endl;
 }
 
 /*
@@ -316,16 +339,19 @@ int main(int argc, char* argv[]) {
   }
   SetStdin(argv[1]);
 
-  i64 L, n;
-  vector<i64> x;
-  cin >> L >> n >> SplitAs<i64>(x, ',');
+  cin >> N >> M;
+  REP (i, N) {
+    vector<char> row;
+    cin >> SplitAs<char>(row);
+    lake.push_back(row);
+  }
 
-  ASSERT(IN(L, 1, 1e6));
-  ASSERT(IN(n, 1, 1e6));
-  ASSERT(n == SizeOf(x));
-  FOREACH (it, x) ASSERT(IN(*it, 0, L));
+  ASSERT(IN(N, 0, 100));
+  ASSERT(IN(M, 0, 100));
+  ASSERT(N == SizeOf(lake));
+  FOREACH (it, lake) ASSERT(M == SizeOf(*it));
 
-  DBG(L, n, x);
-  Solve(L, n, x);
+  DBG(N, M, lake);
+  Solve();
   return 0;
 }
