@@ -305,7 +305,6 @@ void Solve() {
   q.push(coord_s);
   while (!q.empty()) {
     auto coord = q.front();
-    auto cost = maze[coord.first][coord.second];
     FOREACH (d, ds) {
       auto x = coord.first + d->first;
       auto y = coord.second + d->second;
@@ -314,10 +313,9 @@ void Solve() {
           q.push({x, y});
           continue;
         }
-        AMin(&cost, maze[x][y] + 1);
+        AMin(&maze[coord.first][coord.second], maze[x][y] + 1);
       }
     }
-    maze[coord.first][coord.second] = cost;
     q.pop();
   }
   cout << maze[coord_g.first][coord_g.second] << endl;
@@ -359,7 +357,7 @@ int main(int argc, char* argv[]) {
 
   DBG(N, M);
   DBG(coord_s, coord_g);
-  DBG(maze);
   Solve();
+  DBG(maze);
   return 0;
 }
