@@ -295,38 +295,32 @@ void Debug(Head h, Tail... ts) {
  * User-defined Functions and Variables.
  */
 i64 N, M;
-const char water='W', walked='*';
-vector<vector<char>> lake;
-const pair<i64, i64> ds[] = {{0, 1}, {1, 1}, {1, 0}, {1, -1}, {0, -1}, {-1, -1}, {-1, 0}, {-1, 1}};
-
-void BFS(i64 i, i64 j) {
-  queue<pair<i64, i64>> q;
-  q.push({i, j});
-  while (!q.empty()) {
-    auto cur = q.front();
-    FOREACH (it, ds) {
-      i64 x = cur.first + (*it).first;
-      i64 y = cur.second + (*it).second;
-      if (IN(x, 0, N - 1) && IN(y, 0, M - 1) && lake[x][y] == water) {
-        q.push({x, y});
-      }
-    }
-    lake[cur.first][cur.second] = walked;
-    q.pop();
-  }
-}
+const char start='S', goal='G', wall='#';
+pair<i64, i64> coord_s, coord_g;
+vector<vector<i64>> maze;
+const pair<i64, i64> ds[] = {{0, 1}, {1, 0}, {0, -1}, {-1, 0}};
 
 void Solve() {
-  i64 count = 0;
-  REP (i, N) {
-    REP (j, M) {
-      if (lake[i][j] == water) {
-        ++count;
-        BFS(i, j);
+  queue<pair<i64, i64>> q;
+  q.push(coord_s);
+  while (!q.empty()) {
+    auto coord = q.front();
+    auto cost = maze[coord.first][coord.second];
+    FOREACH (d, ds) {
+      auto x = coord.first + d->first;
+      auto y = coord.second + d->second;
+      if (IN(x, 0, N - 1) && IN(y, 0, M - 1) && maze[x][y] >= 0) {
+        if (maze[x][y] == kInf) {
+          q.push({x, y});
+          continue;
+        }
+        AMin(&cost, maze[x][y] + 1);
       }
     }
+    maze[coord.first][coord.second] = cost;
+    q.pop();
   }
-  cout << count << endl;
+  cout << maze[coord_g.first][coord_g.second] << endl;
 }
 
 /*
@@ -340,18 +334,32 @@ int main(int argc, char* argv[]) {
   SetStdin(argv[1]);
 
   cin >> N >> M;
-  REP (i, N) {
-    vector<char> row;
-    cin >> SplitAs<char>(row);
-    lake.push_back(row);
-  }
-
   ASSERT(IN(N, 0, 100));
   ASSERT(IN(M, 0, 100));
-  ASSERT(N == SizeOf(lake));
-  FOREACH (it, lake) ASSERT(M == SizeOf(*it));
 
-  DBG(N, M, lake);
+  REP (i, N) {
+    vector<char> row;
+    vector<i64> parsed;
+    cin >> SplitAs<char>(row);
+    ASSERT(M == SizeOf(row));
+    REP (j, M) {
+      if (row[j] == start) {
+        coord_s = {i, j};
+        parsed.push_back(0);
+      } else if (row[j] == goal) {
+        coord_g = {i, j};
+        parsed.push_back(kInf);
+      } else {
+        parsed.push_back(row[j] == wall ? -1 : kInf);
+      }
+    }
+    maze.push_back(parsed);
+  }
+  ASSERT(N == SizeOf(maze));
+
+  DBG(N, M);
+  DBG(coord_s, coord_g);
+  DBG(maze);
   Solve();
   return 0;
 }
