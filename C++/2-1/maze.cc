@@ -300,24 +300,24 @@ pair<i64, i64> coord_s, coord_g;
 vector<vector<i64>> maze;
 const pair<i64, i64> ds[] = {{0, 1}, {1, 0}, {0, -1}, {-1, 0}};
 
-void Solve() {
+void BFS(i64 i, i64 j) {
   queue<pair<i64, i64>> q;
-  q.push(coord_s);
+  q.push({i, j});
   while (!q.empty()) {
-    auto coord = q.front();
+    auto cur = q.front(); q.pop();
     FOREACH (d, ds) {
-      auto x = coord.first + d->first;
-      auto y = coord.second + d->second;
+      auto x = cur.first + d->first;
+      auto y = cur.second + d->second;
       if (IN(x, 0, N - 1) && IN(y, 0, M - 1) && maze[x][y] >= 0) {
-        if (maze[x][y] == kInf) {
-          q.push({x, y});
-          continue;
-        }
-        AMin(&maze[coord.first][coord.second], maze[x][y] + 1);
+        if (maze[x][y] == kInf) q.push({x, y});
+        else AMin(&maze[cur.first][cur.second], maze[x][y] + 1);
       }
     }
-    q.pop();
   }
+}
+
+void Solve() {
+  BFS(coord_s.first, coord_s.second);
   cout << maze[coord_g.first][coord_g.second] << endl;
 }
 
@@ -336,9 +336,9 @@ int main(int argc, char* argv[]) {
   ASSERT(IN(M, 0, 100));
 
   REP (i, N) {
-    vector<char> row;
+    string row;
     vector<i64> parsed;
-    cin >> SplitAs<char>(row);
+    cin >> row;
     ASSERT(M == SizeOf(row));
     REP (j, M) {
       if (row[j] == start) {
@@ -357,7 +357,7 @@ int main(int argc, char* argv[]) {
 
   DBG(N, M);
   DBG(coord_s, coord_g);
-  Solve();
   DBG(maze);
+  Solve();
   return 0;
 }
