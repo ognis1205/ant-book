@@ -196,7 +196,7 @@ struct Skip {
 
 template<typename T, typename Container, typename Preprocess=Skip>
 SplitAsManip<T, Container, Preprocess> SplitAs(Container& cont,
-                                               char delim,
+                                               char delim=',',
                                                Preprocess&& prep=Preprocess()) {
   return SplitAsManip<T, Container, Preprocess>(cont, delim, prep);
 }
@@ -294,18 +294,20 @@ void Debug(Head h, Tail... ts) {
 /*
  * User-defined Functions and Variables.
  */
-bool DFS(i64 k, const vector<i64>& a, i64 i=0) {
-  if (k < 0 || (i >= SizeOf(a) && k > 0)) return false;
-  if (k == 0) return true;
-  return DFS(k - a[i], a, i + 1) || DFS(k, a, i + 1);
+template<typename Container, typename Callback>
+void Permutation(i64 len, Container& cont, Callback&& callback, i64 sofar=0) {
+  if (sofar == len) {
+    return callback(len, cont);
+  }
+  FOR (i, sofar, SizeOf(cont), 1) {
+    swap(cont[sofar], cont[i]);
+    Permutation(len, cont, callback, sofar+1);
+    swap(cont[sofar], cont[i]);
+  }
 }
 
-void Solve(i64 k, const vector<i64>& a) {
-  if (DFS(k, a)) {
-    cout << "Yes" << endl;
-    return;
-  }
-  cout << "No" << endl;
+void Solve(i64 len, vector<i64>& k) {
+  Permutation(len, k, [](i64 l, vector<i64>& v) { vector<i64> u(&v[0], &v[l]); cout << u << endl; });
 }
 
 /*
@@ -318,16 +320,12 @@ int main(int argc, char* argv[]) {
   }
   SetStdin(argv[1]);
 
-  i64 n, k;
-  vector<i64> a;
-  cin >> n >> SplitAs<i64>(a, ',') >> k;
+  i64 n;
+  vector<i64> k;
+  cin >> n >> SplitAs<i64>(k, ',');
+  ASSERT(IN(n, 0, SizeOf(k) - 1));
 
-  ASSERT(IN(n, 1, 20));
-  ASSERT(n == SizeOf(a));
-  FOREACH (it, a) ASSERT(IN(*it, -1e8, 1e8));
-  ASSERT(IN(k, -1e8, 1e8));
-
-  DBG(n, a, k);
-  Solve(k, a);
+  DBG(n, k);
+  Solve(n, k);
   return 0;
 }

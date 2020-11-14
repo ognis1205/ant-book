@@ -46,7 +46,7 @@ using namespace std;
 #define RALL(cont) end(cont), begin(cont)
 #define FOREACH(it, cont) for (auto it = begin(cont); it != end(cont); it++)
 #define ASSERT(expr...) assert((expr))
-#define IN(x, y, z) y <= x && x <= z
+#define IN(x, y, z) (y <= x && x <= z)
 
 using i8 = int8_t;
 using u8 = uint8_t;
@@ -303,16 +303,15 @@ void BFS(i64 i, i64 j) {
   queue<pair<i64, i64>> q;
   q.push({i, j});
   while (!q.empty()) {
-    auto cur = q.front();
-    FOREACH (it, ds) {
-      i64 x = cur.first + (*it).first;
-      i64 y = cur.second + (*it).second;
+    auto cur = q.front(); q.pop();
+    lake[cur.first][cur.second] = walked;
+    FOREACH (d, ds) {
+      i64 x = cur.first + d->first;
+      i64 y = cur.second + d->second;
       if (IN(x, 0, N - 1) && IN(y, 0, M - 1) && lake[x][y] == water) {
         q.push({x, y});
       }
     }
-    lake[cur.first][cur.second] = walked;
-    q.pop();
   }
 }
 

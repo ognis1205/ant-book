@@ -46,7 +46,7 @@ using namespace std;
 #define RALL(cont) end(cont), begin(cont)
 #define FOREACH(it, cont) for (auto it = begin(cont); it != end(cont); it++)
 #define ASSERT(expr...) assert((expr))
-#define IN(x, y, z) y <= x && x <= z
+#define IN(x, y, z) (y <= x && x <= z)
 
 using i8 = int8_t;
 using u8 = uint8_t;
