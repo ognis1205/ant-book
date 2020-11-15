@@ -46,9 +46,9 @@ using namespace std;
 #define RALL(cont) end(cont), begin(cont)
 #define FOREACH(it, cont) for (auto it = begin(cont); it != end(cont); it++)
 #define ASSERT(expr...) assert((expr))
-#define IN(x, y, z) y <= x && x <= z
+#define IN(x, y, z) (y <= x && x <= z)
 
-using i8 = int8_t;
+  using i8 = int8_t;
 using u8 = uint8_t;
 using i16 = int16_t;
 using u16 = uint16_t;
@@ -104,13 +104,23 @@ struct Init {
 /*
  * IO Helper Functions.
  */
-inline void SetStdin(const string& s) {
-  freopen(s.c_str(), "r", stdin);
-}
+struct Stdin {
+ public:
+  Stdin(const string& path) { fd_ = freopen(path.c_str(), "r", stdin); }
+  ~Stdin() { if (fd_) fclose(stdin); }
+  operator bool(void) { return fd_ != nullptr; }
+ private:
+  FILE* fd_;
+};
 
-inline void SetStdout(const string& s) {
-  freopen(s.c_str(), "w", stdout);
-}
+struct Stdout {
+ public:
+  Stdout(const string& path) { fd_ = freopen(path.c_str(), "w", stdout); }
+  ~Stdout() { if (fd_) fclose(stdout); }
+  operator bool(void) { return fd_ != nullptr; }
+ private:
+  FILE* fd_;
+};
 
 struct has_emplace_back {
   template<typename T>
@@ -256,13 +266,13 @@ CopyTuple(ostream& os, const tuple<Ts...>& t) noexcept {
   CopyTuple<Index + 1, Ts...>(os, t);
 }
 
-template<typename... Ts>
-ostream& operator<<(ostream& os, const tuple<Ts...>& t) noexcept {
-  const auto Size = tuple_size<tuple<Ts...>>::value;
-  os << "(";
-  CopyTuple(os, t);
-  return os << ")";
-}
+  template<typename... Ts>
+  ostream& operator<<(ostream& os, const tuple<Ts...>& t) noexcept {
+    const auto Size = tuple_size<tuple<Ts...>>::value;
+    os << "(";
+    CopyTuple(os, t);
+    return os << ")";
+  }
 
 template<typename T, typename U>
 ostream& operator<<(ostream& os, const pair<T, U>& p) noexcept {
@@ -281,10 +291,10 @@ void Debug(Head h, Tail... ts) {
   cerr << h << (Size  ? ", " : "");
   Debug(ts...);
 }
-#  define VER(...) do {\
-                     cerr << "GCC version is " << __GNUC__ << "." << __GNUC_MINOR__ << "." << __GNUC_PATCHLEVEL__ << endl; \
-                     cerr << "C++ version is " << __cplusplus << endl;\
-                   } while (0)
+#  define VER(...) do {                                                 \
+    cerr << "GCC version is " << __GNUC__ << "." << __GNUC_MINOR__ << "." << __GNUC_PATCHLEVEL__ << endl; \
+    cerr << "C++ version is " << __cplusplus << endl;                   \
+  } while (0)
 #  define DBG(...) cerr << "[DEBUG]\t" << #__VA_ARGS__ << ": "; Debug(__VA_ARGS__); cerr << endl;
 #else
 #  define VER(...)
@@ -381,9 +391,14 @@ void Solve(i64 n, i64 m, const vector<i64>& k) {
 int main(int argc, char* argv[]) {
   if (argc != 2) {
     cerr << "Usage: " << argv[0] << " <input file name>" << endl;
-    return 0;
+    return 1;
   }
-  SetStdin(argv[1]);
+
+  Stdin stdin(argv[1]);
+  if (!stdin) {
+    cerr << "File open error: " << argv[1] << endl;
+    return 1;
+  }
 
   i64 n, m;
   vector<i64> k;

@@ -104,13 +104,23 @@ struct Init {
 /*
  * IO Helper Functions.
  */
-inline void SetStdin(const string& s) {
-  freopen(s.c_str(), "r", stdin);
-}
+struct Stdin {
+ public:
+  Stdin(const string& path) { fd_ = freopen(path.c_str(), "r", stdin); }
+  ~Stdin() { if (fd_) fclose(stdin); }
+  operator bool(void) { return fd_ != nullptr; }
+ private:
+  FILE* fd_;
+};
 
-inline void SetStdout(const string& s) {
-  freopen(s.c_str(), "w", stdout);
-}
+struct Stdout {
+ public:
+  Stdout(const string& path) { fd_ = freopen(path.c_str(), "w", stdout); }
+  ~Stdout() { if (fd_) fclose(stdout); }
+  operator bool(void) { return fd_ != nullptr; }
+ private:
+  FILE* fd_;
+};
 
 struct has_emplace_back {
   template<typename T>
@@ -314,9 +324,14 @@ void Solve(i64 k, const vector<i64>& a) {
 int main(int argc, char* argv[]) {
   if (argc != 2) {
     cerr << "Usage: " << argv[0] << " <input file name>" << endl;
-    return 0;
+    return 1;
   }
-  SetStdin(argv[1]);
+
+  Stdin stdin(argv[1]);
+  if (!stdin) {
+    cerr << "File open error: " << argv[1] << endl;
+    return 1;
+  }
 
   i64 n, k;
   vector<i64> a;

@@ -46,7 +46,7 @@ using namespace std;
 #define RALL(cont) end(cont), begin(cont)
 #define FOREACH(it, cont) for (auto it = begin(cont); it != end(cont); it++)
 #define ASSERT(expr...) assert((expr))
-#define IN(x, y, z) y <= x && x <= z
+#define IN(x, y, z) (y <= x && x <= z)
 
 using i8 = int8_t;
 using u8 = uint8_t;
@@ -312,9 +312,14 @@ void Solve(i64 L, i64 n, vector<i64>& x) {
 int main(int argc, char* argv[]) {
   if (argc != 2) {
     cerr << "Usage: " << argv[0] << " <input file name>" << endl;
-    return 0;
+    return 1;
   }
-  SetStdin(argv[1]);
+
+  Stdin stdin(argv[1]);
+  if (!stdin) {
+    cerr << "File open error: " << argv[1] << endl;
+    return 1;
+  }
 
   i64 L, n;
   vector<i64> x;
