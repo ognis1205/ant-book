@@ -304,19 +304,27 @@ void Debug(Head h, Tail... ts) {
 /*
  * User-defined Functions and Variables.
  */
-void Solve(i64 n, vector<i64>& a) {
-  sort(a.begin(), a.end(), greater<i64>());
-  FOREACH (it, a) {
-    if (next(next(it)) == end(a)) {
-      cout << 0 << endl;
-      return;
-    }
-    i64 l = *next(it) + *next(next(it));
-    if (*it < l) {
-      cout << *it + l << endl;
-      return;
-    }
+using Coin = pair<i64, i64>;
+i64 A;
+vector<Coin> cs;
+
+void Solve() {
+  i64 count=0;
+  sort(cs.begin(), cs.end(), [](Coin& lhs, Coin& rhs) { return lhs.first > rhs.first; });
+  FOREACH (it, cs) {
+    i64 n = min(A / it->first, it->second);
+    count += n;
+    A -= n * it->first;
+    if (A == 0) break;
   }
+  cout << count << endl;
+}
+
+Coin Parse(string& s) {
+  replace(s.begin(), s.end(), '=', ' ');
+  char* delim;
+  Coin c{strtol(s.c_str(), &delim, 10), strtol(delim, nullptr, 10)};
+  return c;
 }
 
 /*
@@ -334,15 +342,12 @@ int main(int argc, char* argv[]) {
     return 1;
   }
 
-  i64 n;
-  vector<i64> a;
-  cin >> n >> SplitAs<i64>(a, ',');
+  cin >> SplitAs<string>(cs, ',', Parse) >> A;
 
-  ASSERT(IN(n, 3, 100));
-  ASSERT(n == SizeOf(a));
-  FOREACH (it, a) ASSERT(IN(*it, 1, 1e6));
+  FOREACH (it, cs) ASSERT(IN(it->second, 0, 1e9));
+  ASSERT(IN(A, 0, 1e9));
 
-  DBG(n, a);
-  Solve(n, a);
+  DBG(cs, A);
+  Solve();
   return 0;
 }

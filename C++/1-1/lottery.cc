@@ -166,9 +166,9 @@ class SplitAsManip {
     stringstream ss(dsv);
     while (getline(ss, token, delim_)) {
       T t;
-      stringstream ss(prep_(token));
+      stringstream ss(token);
       ss >> t;
-      Append(cont_, t);
+      Append(cont_, prep_(t));
     }
     return is;
   }
@@ -188,7 +188,7 @@ class SplitAsManip<char, Container, Preprocess> {
     string s;
     is >> s;
     for (i64 i = 0; i < s.size(); i++) {
-      Append(cont_, s[i]);
+      Append(cont_, prep_(s[i]));
 	}
     return is;
   }
@@ -295,7 +295,7 @@ void Debug(Head h, Tail... ts) {
     cerr << "GCC version is " << __GNUC__ << "." << __GNUC_MINOR__ << "." << __GNUC_PATCHLEVEL__ << endl; \
     cerr << "C++ version is " << __cplusplus << endl;                   \
   } while (0)
-#  define DBG(...) cerr << "[DEBUG]\t" << #__VA_ARGS__ << ": "; Debug(__VA_ARGS__); cerr << endl;
+#  define DBG(...) cerr << "\u001b[36m[DEBUG]\u001b[0m\t" << #__VA_ARGS__ << ": "; Debug(__VA_ARGS__); cerr << endl;
 #else
 #  define VER(...)
 #  define DBG(...)
