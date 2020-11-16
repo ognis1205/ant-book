@@ -323,8 +323,7 @@ void Solve() {
 Coin Parse(string& s) {
   replace(s.begin(), s.end(), '=', ' ');
   char* delim;
-  Coin c{strtol(s.c_str(), &delim, 10), strtol(delim, nullptr, 10)};
-  return c;
+  return Coin({strtol(s.c_str(), &delim, 10), strtol(delim, nullptr, 10)});
 }
 
 /*
