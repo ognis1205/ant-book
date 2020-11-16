@@ -161,6 +161,7 @@ class SplitAsManip {
                char delim,
                Preprocess& prep) : cont_(cont), delim_(delim), prep_(prep) {}
   istream& operator()(istream& is) {
+    i64 pos=0;
     string dsv, token;
     is >> dsv;
     stringstream ss(dsv);
@@ -168,7 +169,8 @@ class SplitAsManip {
       T t;
       stringstream ss(token);
       ss >> t;
-      Append(cont_, prep_(t));
+      Append(cont_, prep_(pos, t));
+      pos++;
     }
     return is;
   }
@@ -188,7 +190,7 @@ class SplitAsManip<char, Container, Preprocess> {
     string s;
     is >> s;
     for (i64 i = 0; i < s.size(); i++) {
-      Append(cont_, prep_(s[i]));
+      Append(cont_, prep_(i, s[i]));
 	}
     return is;
   }
@@ -199,12 +201,26 @@ class SplitAsManip<char, Container, Preprocess> {
 
 struct Skip {
   template<typename T>
-  constexpr auto operator()(T&& t) const noexcept -> decltype(forward<T>(t)) {
+  constexpr auto operator()(i64& i, T&& t) const noexcept -> decltype(forward<T>(t)) {
     return forward<T>(t);
   }
 };
 
-template<typename T, typename Container, typename Preprocess=Skip>
+template<typename T,
+         typename Container,
+         typename Preprocess=Skip,
+         typename enable_if<is_same<T, char>::value || is_same<T, wchar_t>::value,
+                            nullptr_t>::type=nullptr>
+SplitAsManip<T, Container, Preprocess> SplitAs(Container& cont,
+                                               Preprocess&& prep=Preprocess()) {
+  return SplitAsManip<T, Container, Preprocess>(cont, '\0', prep);
+}
+
+template<typename T,
+         typename Container,
+         typename Preprocess=Skip,
+         typename enable_if<!is_same<T, char>::value && !is_same<T, wchar_t>::value,
+                            nullptr_t>::type=nullptr>
 SplitAsManip<T, Container, Preprocess> SplitAs(Container& cont,
                                                char delim=',',
                                                Preprocess&& prep=Preprocess()) {
@@ -291,10 +307,10 @@ void Debug(Head h, Tail... ts) {
   cerr << h << (Size  ? ", " : "");
   Debug(ts...);
 }
-#  define VER(...) do {                                                 \
-    cerr << "GCC version is " << __GNUC__ << "." << __GNUC_MINOR__ << "." << __GNUC_PATCHLEVEL__ << endl; \
-    cerr << "C++ version is " << __cplusplus << endl;                   \
-  } while (0)
+#  define VER(...) do {\
+                     cerr << "GCC version is " << __GNUC__ << "." << __GNUC_MINOR__ << "." << __GNUC_PATCHLEVEL__ << endl;\
+                     cerr << "C++ version is " << __cplusplus << endl;\
+                   } while (0)
 #  define DBG(...) cerr << "\u001b[36m[DEBUG]\u001b[0m\t" << #__VA_ARGS__ << ": "; Debug(__VA_ARGS__); cerr << endl;
 #else
 #  define VER(...)
@@ -331,6 +347,19 @@ void Solve() {
   cout << maze[coord_g.first][coord_g.second] << endl;
 }
 
+i64 Parse(const i64& i, const i64& j, const char& c) {
+  switch (c) {
+  case start:
+    coord_s = {i, j};
+    return 0;
+  case goal:
+    coord_g = {i, j};
+    return kInf;
+  default:
+    return c == wall ? -1 : kInf;
+  }
+}
+
 /*
  * Main Function.
  */
@@ -351,24 +380,10 @@ int main(int argc, char* argv[]) {
   ASSERT(IN(M, 0, 100));
 
   REP (i, N) {
-    string row;
-    vector<i64> parsed;
-    cin >> row;
-    ASSERT(M == SizeOf(row));
-    REP (j, M) {
-      if (row[j] == start) {
-        coord_s = {i, j};
-        parsed.push_back(0);
-      } else if (row[j] == goal) {
-        coord_g = {i, j};
-        parsed.push_back(kInf);
-      } else {
-        parsed.push_back(row[j] == wall ? -1 : kInf);
-      }
-    }
-    maze.push_back(parsed);
+    vector<i64> row;
+    cin >> SplitAs<char>(row, bind(Parse, i, placeholders::_1, placeholders::_2));
+    maze.push_back(row);
   }
-  ASSERT(N == SizeOf(maze));
 
   DBG(N, M);
   DBG(coord_s, coord_g);
