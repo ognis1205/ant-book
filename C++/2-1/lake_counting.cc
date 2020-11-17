@@ -162,13 +162,10 @@ class SplitAsManip {
                Preprocess& prep) : cont_(cont), delim_(delim), prep_(prep) {}
   istream& operator()(istream& is) {
     i64 pos=0;
-    string dsv, token;
-    is >> dsv;
-    stringstream ss(dsv);
+    string token;
+    string dsv; is >> dsv; stringstream ss(dsv);
     while (getline(ss, token, delim_)) {
-      T t;
-      stringstream ss(token);
-      ss >> t;
+      T t; stringstream ss(token); ss >> t;
       Append(cont_, prep_(pos, t));
       pos++;
     }
@@ -187,11 +184,8 @@ class SplitAsManip<char, Container, Preprocess> {
                char delim,
                Preprocess& prep) : cont_(cont), prep_(prep) {}
   istream& operator()(istream& is) {
-    string s;
-    is >> s;
-    for (i64 i = 0; i < s.size(); i++) {
-      Append(cont_, prep_(i, s[i]));
-	}
+    string s; is >> s;
+    for (i64 i = 0; i < s.size(); i++) Append(cont_, prep_(i, s[i]));
     return is;
   }
  private:
@@ -209,8 +203,7 @@ struct Skip {
 template<typename T,
          typename Container,
          typename Preprocess=Skip,
-         typename enable_if<is_same<T, char>::value || is_same<T, wchar_t>::value,
-                            nullptr_t>::type=nullptr>
+         typename enable_if<is_same<T, char>::value, nullptr_t>::type=nullptr>
 SplitAsManip<T, Container, Preprocess> SplitAs(Container& cont,
                                                Preprocess&& prep=Preprocess()) {
   return SplitAsManip<T, Container, Preprocess>(cont, '\0', prep);
@@ -219,8 +212,7 @@ SplitAsManip<T, Container, Preprocess> SplitAs(Container& cont,
 template<typename T,
          typename Container,
          typename Preprocess=Skip,
-         typename enable_if<!is_same<T, char>::value && !is_same<T, wchar_t>::value,
-                            nullptr_t>::type=nullptr>
+         typename enable_if<!is_same<T, char>::value, nullptr_t>::type=nullptr>
 SplitAsManip<T, Container, Preprocess> SplitAs(Container& cont,
                                                char delim=',',
                                                Preprocess&& prep=Preprocess()) {
@@ -249,8 +241,7 @@ template<typename... Ts>
 ostream& operator<<(ostream& os, const tuple<Ts...>& t) noexcept;
 
 template<typename C,
-         typename enable_if<is_container<C>::value && !is_same<C, string>::value && !is_same<C, wstring>::value,
-                            nullptr_t>::type=nullptr>
+         typename enable_if<is_container<C>::value && !is_same<C, string>::value, nullptr_t>::type=nullptr>
 ostream& operator<<(ostream& os, const C& cont) noexcept {
   os << "[";
   for (auto it = begin(cont); it != end(cont); it++) {
@@ -261,8 +252,7 @@ ostream& operator<<(ostream& os, const C& cont) noexcept {
 
 template<typename T,
          size_t N,
-         typename enable_if<!is_same<T, char>::value && !is_same<T, wchar_t>::value,
-                            nullptr_t>::type=nullptr>
+         typename enable_if<!is_same<T, char>::value, nullptr_t>::type=nullptr>
 ostream& operator<<(ostream& os, const T (&arr)[N]) noexcept {
   os << "[";
   for (auto it = begin(arr); it != end(arr); it++) {

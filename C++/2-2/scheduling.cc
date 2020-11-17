@@ -122,105 +122,55 @@ struct Stdout {
   FILE* fd_;
 };
 
-struct has_emplace_back {
-  template<typename T>
-  static auto check(T&& t) -> decltype(t.emplace_back(), true_type {});
-  template<typename T>
-  static auto check(...) -> false_type;
-};
-
-struct has_emplace {
-  template<typename T>
-  static auto check(T&& t) -> decltype(t.emplace(), true_type {});
-  template<typename T>
-  static auto check(...) -> false_type;
-};
-
-template<typename T>
-struct is_sequential : public decltype(has_emplace_back::check<T>(declval<T>())) {};
-
-template<typename T>
-struct is_associative : public decltype(has_emplace::check<T>(declval<T>())) {};
-
-template<typename C, typename... Args>
-inline typename enable_if<is_sequential<C>::value, void>::type
-Append(C& cont, Args&&... args) {
-  cont.emplace_back(forward<Args>(args)...);
-}
-
-template<typename C, typename... Args>
-inline typename enable_if<is_associative<C>::value, void>::type
-Append(C& cont, Args&&... args) {
-  cont.emplace(forward<Args>(args)...);
-}
-
-template<typename T, typename Container, typename Preprocess>
+template<typename T, typename FunctionObject>
 class SplitAsManip {
  public:
-  SplitAsManip(Container& cont,
-               char delim,
-               Preprocess& prep) : cont_(cont), delim_(delim), prep_(prep) {}
+  SplitAsManip(char delim, FunctionObject& func) : delim_(delim), func_(func) {}
   istream& operator()(istream& is) {
     i64 pos=0;
     string token;
     string dsv; is >> dsv; stringstream ss(dsv);
     while (getline(ss, token, delim_)) {
       T t; stringstream ss(token); ss >> t;
-      Append(cont_, prep_(pos, t));
+      func_(pos, t);
       pos++;
     }
     return is;
   }
  private:
-  Container& cont_;
   char delim_;
-  Preprocess& prep_;
+  FunctionObject& func_;
 };
 
-template<typename Container, typename Preprocess>
-class SplitAsManip<char, Container, Preprocess> {
+template<typename FunctionObject>
+class SplitAsManip<char, FunctionObject> {
  public:
-  SplitAsManip(Container& cont,
-               char delim,
-               Preprocess& prep) : cont_(cont), prep_(prep) {}
+  SplitAsManip(char delim, FunctionObject& func) : func_(func) {}
   istream& operator()(istream& is) {
     string s; is >> s;
-    for (i64 i = 0; i < s.size(); i++) Append(cont_, prep_(i, s[i]));
+    for (i64 i = 0; i < s.size(); i++) func_(i, s[i]);
     return is;
   }
  private:
-  Container& cont_;
-  Preprocess& prep_;
-};
-
-struct Skip {
-  template<typename T>
-  constexpr auto operator()(i64 i, T&& t) const noexcept -> decltype(forward<T>(t)) {
-    return forward<T>(t);
-  }
+  FunctionObject& func_;
 };
 
 template<typename T,
-         typename Container,
-         typename Preprocess=Skip,
+         typename FunctionObject,
          typename enable_if<is_same<T, char>::value, nullptr_t>::type=nullptr>
-SplitAsManip<T, Container, Preprocess> SplitAs(Container& cont,
-                                               Preprocess&& prep=Preprocess()) {
-  return SplitAsManip<T, Container, Preprocess>(cont, '\0', prep);
+SplitAsManip<T, FunctionObject> SplitAs(FunctionObject&& func) {
+  return SplitAsManip<T, FunctionObject>('\0', func);
 }
 
 template<typename T,
-         typename Container,
-         typename Preprocess=Skip,
+         typename FunctionObject,
          typename enable_if<!is_same<T, char>::value, nullptr_t>::type=nullptr>
-SplitAsManip<T, Container, Preprocess> SplitAs(Container& cont,
-                                               char delim=',',
-                                               Preprocess&& prep=Preprocess()) {
-  return SplitAsManip<T, Container, Preprocess>(cont, delim, prep);
+SplitAsManip<T, FunctionObject> SplitAs(char delim, FunctionObject&& func) {
+  return SplitAsManip<T, FunctionObject>(delim, func);
 }
 
-template<typename T, typename Container, typename Preprocess>
-istream& operator>>(istream& is, SplitAsManip<T, Container, Preprocess>&& manip) {
+template<typename T, typename FunctionObject>
+istream& operator>>(istream& is, SplitAsManip<T, FunctionObject>&& manip) {
   return manip(is);
 }
 
@@ -310,16 +260,49 @@ void Debug(Head h, Tail... ts) {
 /*
  * User-defined Functions and Variables.
  */
-void Solve(i64 L, i64 n, vector<i64>& x) {
-  vector<i64> rs;
-  i64 minimum = 0;
-  i64 maximum = 0;
-  FOREACH (it, x) {
-    maximum = max(maximum, max(*it, L - *it));
-    minimum = max(minimum, min(*it, L - *it));
+i64 N;
+vector<i64> ss, ts;
+
+void Solve() {
+  return;
+}
+
+string& Clean(string* line) {
+  line->erase(remove(line->begin(), line->end(), ' '), line->end());
+  i64 nested=0;
+  for (char& c : *line) {
+    if (c == '{') nested++;
+    if (c == '}') nested--;
+    if (nested == 0 && c == ',') c = '/';
   }
-  cout << "min = " << minimum << endl;
-  cout << "max = " << maximum << endl;
+  return *line;
+}
+
+void CsvToV(const string& s, vector<i64>* v) {
+  string l;
+  istringstream iss(s);
+  while (getline(iss, l, ',')) {
+    v->push_back(stoll(l));
+  }
+}
+
+void Parse(const i64& i, string s) {
+  i64 pos=0;
+  string key;
+  if ((pos = s.find("=")) != string::npos) {
+    key = s.substr(0, pos);
+    s.erase(0, pos + 1);
+    s.erase(remove_if(s.begin(), s.end(), [](char c){ return c == '{' || c == '}'; }), s.end());
+    if (key == "N") {
+      N = stoll(s);
+    } else if (key == "s") {
+      CsvToV(s, &ss);
+    } else if (key == "t") {
+      CsvToV(s, &ts);
+    }
+  } else {
+    throw exception();
+  }
 }
 
 /*
@@ -337,16 +320,17 @@ int main(int argc, char* argv[]) {
     return 1;
   }
 
-  i64 L, n;
-  vector<i64> x;
-  cin >> L >> n >> SplitAs<i64>(x, ',');
+  string line;
+  while (getline(cin, line)) {
+    istringstream iss(Clean(&line));
+    iss >> SplitAs<string>('/', Parse);
+  }
 
-  ASSERT(IN(L, 1, 1e6));
-  ASSERT(IN(n, 1, 1e6));
-  ASSERT(n == SizeOf(x));
-  FOREACH (it, x) ASSERT(IN(*it, 0, L));
+  ASSERT(IN(N, 1, 1e5));
+  FOREACH (it, ss) ASSERT(IN(*it, 0, 1e5));
+  FOREACH (it, ts) ASSERT(IN(*it, 0, 1e5));
 
-  DBG(L, n, x);
-  Solve(L, n, x);
+  DBG(N, ss, ts);
+  Solve();
   return 0;
 }
