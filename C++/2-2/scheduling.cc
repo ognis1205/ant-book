@@ -65,6 +65,20 @@ constexpr f64 kEps = 1e-12;
 constexpr f64 kPi = 3.14159265358979323846;
 
 /*
+ * Initialization Settings.
+ */
+struct Init {
+  static constexpr int kIosPrecision = 15;
+  static constexpr bool kAutoFlush = false;
+  Init() {
+    cin.tie(nullptr);
+    ios::sync_with_stdio(false);
+    cout << fixed << setprecision(kIosPrecision);
+    if (kAutoFlush) cout << unitbuf;
+  }
+} INIT;
+
+/*
  * Templates of Some Basic Operations.
  */
 template<typename T, typename U>
@@ -88,20 +102,6 @@ inline i64 SizeOf(const T (&t)[N]) {
 }
 
 /*
- * Initialization Settings.
- */
-struct Init {
-  static constexpr int kIosPrecision = 15;
-  static constexpr bool kAutoFlush = false;
-  Init() {
-    cin.tie(nullptr);
-    ios::sync_with_stdio(false);
-    cout << fixed << setprecision(kIosPrecision);
-    if (kAutoFlush) cout << unitbuf;
-  }
-} INIT;
-
-/*
  * IO Helper Functions.
  */
 struct Stdin {
@@ -122,55 +122,53 @@ struct Stdout {
   FILE* fd_;
 };
 
-template<typename T, typename FunctionObject>
+template<typename T>
+using Callback = void (*)(const i64&, T*);
+
+template<typename T>
 class SplitAsManip {
  public:
-  SplitAsManip(char delim, FunctionObject& func) : delim_(delim), func_(func) {}
+  SplitAsManip(char delim, Callback<T>& callback) : delim_(delim), callback_(callback) {}
   istream& operator()(istream& is) {
     i64 pos=0;
     string token;
     string dsv; is >> dsv; stringstream ss(dsv);
     while (getline(ss, token, delim_)) {
       T t; stringstream ss(token); ss >> t;
-      func_(pos, t);
-      pos++;
+      callback_(pos++, &t);
     }
     return is;
   }
  private:
   char delim_;
-  FunctionObject& func_;
+  Callback<T>& callback_;
 };
 
-template<typename FunctionObject>
-class SplitAsManip<char, FunctionObject> {
+template<>
+class SplitAsManip<char> {
  public:
-  SplitAsManip(char delim, FunctionObject& func) : func_(func) {}
+  SplitAsManip(char delim, Callback<char>& callback) : callback_(callback) {}
   istream& operator()(istream& is) {
     string s; is >> s;
-    for (i64 i = 0; i < s.size(); i++) func_(i, s[i]);
+    for (i64 i = 0; i < s.size(); i++) callback_(i, &s[i]);
     return is;
   }
  private:
-  FunctionObject& func_;
+  Callback<char>& callback_;
 };
 
-template<typename T,
-         typename FunctionObject,
-         typename enable_if<is_same<T, char>::value, nullptr_t>::type=nullptr>
-SplitAsManip<T, FunctionObject> SplitAs(FunctionObject&& func) {
-  return SplitAsManip<T, FunctionObject>('\0', func);
+template<typename T, typename enable_if<is_same<T, char>::value, nullptr_t>::type=nullptr>
+SplitAsManip<T> SplitAs(Callback<T>&& callback) {
+  return SplitAsManip<T>(callback);
 }
 
-template<typename T,
-         typename FunctionObject,
-         typename enable_if<!is_same<T, char>::value, nullptr_t>::type=nullptr>
-SplitAsManip<T, FunctionObject> SplitAs(char delim, FunctionObject&& func) {
-  return SplitAsManip<T, FunctionObject>(delim, func);
+template<typename T, typename enable_if<!is_same<T, char>::value, nullptr_t>::type=nullptr>
+SplitAsManip<T> SplitAs(char delim, Callback<T>&& callback) {
+  return SplitAsManip<T>(delim, callback);
 }
 
-template<typename T, typename FunctionObject>
-istream& operator>>(istream& is, SplitAsManip<T, FunctionObject>&& manip) {
+template<typename T>
+istream& operator>>(istream& is, SplitAsManip<T>&& manip) {
   return manip(is);
 }
 
@@ -268,13 +266,14 @@ void Solve() {
 }
 
 string& Clean(string* line) {
-  line->erase(remove(line->begin(), line->end(), ' '), line->end());
   i64 nested=0;
   for (char& c : *line) {
     if (c == '{') nested++;
     if (c == '}') nested--;
     if (nested == 0 && c == ',') c = '/';
   }
+  line->erase(remove(line->begin(), line->end(), ' '), line->end());
+  line->erase(remove_if(line->begin(), line->end(), [](char c){ return c == '{' || c == '}'; }), line->end());
   return *line;
 }
 
@@ -286,22 +285,21 @@ void CsvToV(const string& s, vector<i64>* v) {
   }
 }
 
-void Parse(const i64& i, string s) {
+void Parse(const i64& i, string* s) {
   i64 pos=0;
   string key;
-  if ((pos = s.find("=")) != string::npos) {
-    key = s.substr(0, pos);
-    s.erase(0, pos + 1);
-    s.erase(remove_if(s.begin(), s.end(), [](char c){ return c == '{' || c == '}'; }), s.end());
+  if ((pos = s->find("=")) != string::npos) {
+    key = s->substr(0, pos);
+    s->erase(0, pos + 1);
     if (key == "N") {
-      N = stoll(s);
+      N = stoll(*s);
     } else if (key == "s") {
-      CsvToV(s, &ss);
+      CsvToV(*s, &ss);
     } else if (key == "t") {
-      CsvToV(s, &ts);
+      CsvToV(*s, &ts);
     }
   } else {
-    throw exception();
+    throw "Invalid input format";
   }
 }
 
@@ -320,10 +318,14 @@ int main(int argc, char* argv[]) {
     return 1;
   }
 
-  string line;
-  while (getline(cin, line)) {
-    istringstream iss(Clean(&line));
-    iss >> SplitAs<string>('/', Parse);
+  for (string line; getline(cin, line);) {
+    try {
+      istringstream iss(Clean(&line));
+      iss >> SplitAs<string>('/', Parse);
+    } catch (char const* err) {
+      cerr << err << endl;
+      return 1;
+    }
   }
 
   ASSERT(IN(N, 1, 1e5));
