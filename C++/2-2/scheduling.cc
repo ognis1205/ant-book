@@ -132,9 +132,9 @@ class SplitAsManip {
   istream& operator()(istream& is) {
     i64 pos=0;
     string token;
-    string dsv; is >> dsv; stringstream ss(dsv);
+    string dsv; is >> dsv; istringstream ss(dsv);
     while (getline(ss, token, delim_)) {
-      T t; stringstream ss(token); ss >> t;
+      T t; istringstream ss(token); ss >> t;
       callback_(pos++, &t);
     }
     return is;
@@ -278,10 +278,9 @@ string& Clean(string* line) {
 }
 
 void CsvToV(const string& s, vector<i64>* v) {
-  string l;
   istringstream iss(s);
-  while (getline(iss, l, ',')) {
-    v->push_back(stoll(l));
+  for (string token; getline(iss, token, ',');) {
+    v->push_back(stoll(token));
   }
 }
 
