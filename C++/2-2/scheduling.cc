@@ -131,10 +131,9 @@ class SplitAsManip {
   SplitAsManip(char delim, Callback<T>& callback) : delim_(delim), callback_(callback) {}
   istream& operator()(istream& is) {
     i64 pos=0;
-    string token;
-    string dsv; is >> dsv; istringstream ss(dsv);
-    while (getline(ss, token, delim_)) {
-      T t; istringstream ss(token); ss >> t;
+    string dsv; is >> dsv; istringstream iss(dsv);
+    for (string token; getline(iss, token, delim_);) {
+      T t; istringstream parse(token); parse >> t;
       callback_(pos++, &t);
     }
     return is;
@@ -147,7 +146,7 @@ class SplitAsManip {
 template<>
 class SplitAsManip<char> {
  public:
-  SplitAsManip(char delim, Callback<char>& callback) : callback_(callback) {}
+  SplitAsManip(Callback<char>& callback) : callback_(callback) {}
   istream& operator()(istream& is) {
     string s; is >> s;
     for (i64 i = 0; i < s.size(); i++) callback_(i, &s[i]);
@@ -258,11 +257,23 @@ void Debug(Head h, Tail... ts) {
 /*
  * User-defined Functions and Variables.
  */
+using Task = pair<i64, i64>;
 i64 N;
 vector<i64> ss, ts;
+vector<Task> tasks;
 
 void Solve() {
-  return;
+  i64 count=0, prev=0;
+  sort(tasks.begin(),
+       tasks.end(),
+       [](const Task& lhs, const Task& rhs) {return lhs.second < rhs.second;});
+  FOREACH (it, tasks) {
+    if (prev <= it->first) {
+      count++;
+      prev = it->second;
+    }
+  }
+  cout << count << endl;
 }
 
 string& Clean(string* line) {
@@ -326,12 +337,12 @@ int main(int argc, char* argv[]) {
       return 1;
     }
   }
+  REP (i, 5) tasks.emplace_back(make_pair(ss[i], ts[i]));
 
   ASSERT(IN(N, 1, 1e5));
-  FOREACH (it, ss) ASSERT(IN(*it, 0, 1e5));
-  FOREACH (it, ts) ASSERT(IN(*it, 0, 1e5));
+  FOREACH (it, tasks) ASSERT(IN(it->first, 0, 1e5) && IN(it->second, 0, 1e5) && it->first <= it->second);
 
-  DBG(N, ss, ts);
+  DBG(N, tasks);
   Solve();
   return 0;
 }
