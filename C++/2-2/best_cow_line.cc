@@ -253,26 +253,66 @@ void Debug(Head h, Tail... ts) {
 /*
  * User-defined Functions and Variables.
  */
-using Coin = pair<i64, i64>;
-i64 A;
-vector<Coin> cs;
+i64 N;
+string S, T;
 
-void Solve() {
-  i64 count=0;
-  sort(cs.begin(), cs.end(), [](Coin& lhs, Coin& rhs) { return lhs.first > rhs.first; });
-  FOREACH (it, cs) {
-    i64 n = min(A / it->first, it->second);
-    count += n;
-    A -= n * it->first;
-    if (A == 0) break;
+string Inefficient(i64 l, i64 r) {
+  if (l == r) {
+    string T(1, S[l]);
+    return T;
+  } else if (S[l] < S[r]) {
+    string T(1, S[l]);
+    return T + Inefficient(l + 1, r);
+  } else if (S[l] > S[r]) {
+    string T(1, S[r]);
+    return T + Inefficient(l, r - 1);
+  } else {
+    string L(1, S[l]);
+    string R(1, S[r]);
+    L += Inefficient(l + 1, r);
+    R += Inefficient(l, r - 1);
+    return L < R ? L : R;
   }
-  cout << count << endl;
 }
 
-void Parse(const i64& i, string* s) {
-  char* delim;
-  replace(s->begin(), s->end(), '=', ' ');
-  cs.emplace_back(Coin({strtol(s->c_str(), &delim, 10), strtol(delim, nullptr, 10)}));
+void Solve() {
+  i64 l=0, r=SizeOf(S)-1;
+  bool left=false;
+  while (l <= r) {
+    for (i64 i=0; l + i <= r; i++) {
+      if (S[l + i] < S[r - i]) {
+        left = true;
+        break;
+      }
+      if (S[l + i] > S[r - i]) {
+        left = false;
+        break;
+      }
+    }
+    if (left) T += S[l++];
+    else T += S[r--];
+  }
+  cout << T << endl;
+}
+
+void Parse(string* line) {
+  i64 pos = 0;
+  string key;
+  if ((pos = line->find("=")) != string::npos) {
+    key = line->substr(0, pos);
+    line->erase(0, pos + 1);
+    if (key == "N") {
+      N = stoll(*line);
+    } else if (key == "S") {
+      S = *line;
+    }
+  } else {
+    throw "Invalid input format";
+  }
+}
+
+void Clean(string* line) {
+  line->erase(remove_if(line->begin(), line->end(), [](const char& c) {return c == ' ' || c == '"'; }), line->end());
 }
 
 /*
@@ -290,12 +330,15 @@ int main(int argc, char* argv[]) {
     return 1;
   }
 
-  cin >> SplitAs<string>(',', Parse) >> A;
+  for (string line; getline(cin, line);) {
+    Clean(&line);
+    Parse(&line);
+  }
 
-  FOREACH (it, cs) ASSERT(IN(it->second, 0, 1e9));
-  ASSERT(IN(A, 0, 1e9));
+  ASSERT(IN(N, 1, 2e3));
+  FOREACH(it, S) ASSERT(isupper(*it));
 
-  DBG(cs, A);
+  DBG(N, S);
   Solve();
   return 0;
 }

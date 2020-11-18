@@ -128,7 +128,7 @@ struct Stdout {
 template<typename T, typename Callback>
 class SplitAsManip {
  public:
-  SplitAsManip(char delim, Callback& callback) : delim_(delim), callback_(callback) {}
+  SplitAsManip(char delim, Callback&& callback) : delim_(delim), callback_(callback) {}
   istream& operator()(istream& is) {
     i64 pos=0;
     string dsv; is >> dsv; istringstream iss(dsv);
@@ -146,7 +146,7 @@ class SplitAsManip {
 template<typename Callback>
 class SplitAsManip<char, Callback> {
  public:
-  SplitAsManip(Callback& callback) : callback_(callback) {}
+  SplitAsManip(Callback&& callback) : callback_(callback) {}
   istream& operator()(istream& is) {
     string s; is >> s;
     for (i64 i = 0; i < s.size(); i++) callback_(i, &s[i]);
@@ -158,12 +158,12 @@ class SplitAsManip<char, Callback> {
 
 template<typename T, typename Callback, typename enable_if<!is_same<T, char>::value, nullptr_t>::type=nullptr>
 SplitAsManip<T, Callback> SplitAs(char delim, Callback&& callback) {
-  return SplitAsManip<T, Callback>(delim, callback);
+  return SplitAsManip<T, Callback>(delim, forward<Callback>(callback));
 }
 
 template<typename T, typename Callback, typename enable_if<is_same<T, char>::value, nullptr_t>::type=nullptr>
 SplitAsManip<T, Callback> SplitAs(Callback&& callback) {
-  return SplitAsManip<T, Callback>(callback);
+  return SplitAsManip<T, Callback>(forward<Callback>(callback));
 }
 
 template<typename T, typename Callback>
@@ -260,7 +260,7 @@ vector<Task> tasks;
 
 void Solve() {
   i64 count=0, prev=0;
-  REP (i, 5) tasks.emplace_back(make_pair(ss[i], ts[i]));
+  REP (i, N) tasks.emplace_back(make_pair(ss[i], ts[i]));
   sort(tasks.begin(),
        tasks.end(),
        [](const Task& lhs, const Task& rhs) {return lhs.second < rhs.second;});
@@ -273,19 +273,17 @@ void Solve() {
   cout << count << endl;
 }
 
-string& Clean(string* line) {
+void Clean(string* line) {
   i64 nested=0;
   for (char& c : *line) {
     if (c == '{') nested++;
     if (c == '}') nested--;
     if (c == ',' && nested == 0) c = '/';
   }
-  line->erase(remove(line->begin(), line->end(), ' '), line->end());
   line->erase(remove_if(line->begin(),
                         line->end(),
-                        [](char c){ return c == '{' || c == '}'; }),
+                        [](char c){ return c == '{' || c == '}' || c == ' '; }),
               line->end());
-  return *line;
 }
 
 void CsvToVec(const string& s, vector<i64>* v) {
@@ -330,7 +328,8 @@ int main(int argc, char* argv[]) {
 
   for (string line; getline(cin, line);) {
     try {
-      istringstream iss(Clean(&line));
+      Clean(&line);
+      istringstream iss(line);
       iss >> SplitAs<string>('/', Parse);
     } catch (char const* err) {
       cerr << err << endl;
