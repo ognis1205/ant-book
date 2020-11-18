@@ -254,26 +254,7 @@ void Debug(Head h, Tail... ts) {
  * User-defined Functions and Variables.
  */
 i64 N;
-string S, T;
-
-string Inefficient(i64 l, i64 r) {
-  if (l == r) {
-    string T(1, S[l]);
-    return T;
-  } else if (S[l] < S[r]) {
-    string T(1, S[l]);
-    return T + Inefficient(l + 1, r);
-  } else if (S[l] > S[r]) {
-    string T(1, S[r]);
-    return T + Inefficient(l, r - 1);
-  } else {
-    string L(1, S[l]);
-    string R(1, S[r]);
-    L += Inefficient(l + 1, r);
-    R += Inefficient(l, r - 1);
-    return L < R ? L : R;
-  }
-}
+string S;
 
 void Solve() {
   i64 l=0, r=SizeOf(S)-1;
@@ -289,10 +270,10 @@ void Solve() {
         break;
       }
     }
-    if (left) T += S[l++];
-    else T += S[r--];
+    if (left) cout << S[l++];
+    else cout << S[r--];
   }
-  cout << T << endl;
+  cout << endl;
 }
 
 void Parse(string* line) {

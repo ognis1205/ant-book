@@ -128,7 +128,7 @@ struct Stdout {
 template<typename T, typename Callback>
 class SplitAsManip {
  public:
-  SplitAsManip(char delim, Callback& callback) : delim_(delim), callback_(callback) {}
+  SplitAsManip(char delim, Callback&& callback) : delim_(delim), callback_(callback) {}
   istream& operator()(istream& is) {
     i64 pos=0;
     string dsv; is >> dsv; istringstream iss(dsv);
@@ -146,7 +146,7 @@ class SplitAsManip {
 template<typename Callback>
 class SplitAsManip<char, Callback> {
  public:
-  SplitAsManip(Callback& callback) : callback_(callback) {}
+  SplitAsManip(Callback&& callback) : callback_(callback) {}
   istream& operator()(istream& is) {
     string s; is >> s;
     for (i64 i = 0; i < s.size(); i++) callback_(i, &s[i]);
@@ -158,12 +158,12 @@ class SplitAsManip<char, Callback> {
 
 template<typename T, typename Callback, typename enable_if<!is_same<T, char>::value, nullptr_t>::type=nullptr>
 SplitAsManip<T, Callback> SplitAs(char delim, Callback&& callback) {
-  return SplitAsManip<T, Callback>(delim, callback);
+  return SplitAsManip<T, Callback>(delim, forward<Callback>(callback));
 }
 
 template<typename T, typename Callback, typename enable_if<is_same<T, char>::value, nullptr_t>::type=nullptr>
 SplitAsManip<T, Callback> SplitAs(Callback&& callback) {
-  return SplitAsManip<T, Callback>(callback);
+  return SplitAsManip<T, Callback>(forward<Callback>(callback));
 }
 
 template<typename T, typename Callback>
