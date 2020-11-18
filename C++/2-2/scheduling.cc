@@ -122,13 +122,13 @@ struct Stdout {
   FILE* fd_;
 };
 
-template<typename T>
-using Callback = void (*)(const i64&, T*);
+//template<typename T>
+//using Callback = void (*)(const i64&, T*);
 
-template<typename T>
+template<typename T, typename Callback>
 class SplitAsManip {
  public:
-  SplitAsManip(char delim, Callback<T>& callback) : delim_(delim), callback_(callback) {}
+  SplitAsManip(char delim, Callback& callback) : delim_(delim), callback_(callback) {}
   istream& operator()(istream& is) {
     i64 pos=0;
     string dsv; is >> dsv; istringstream iss(dsv);
@@ -140,34 +140,34 @@ class SplitAsManip {
   }
  private:
   char delim_;
-  Callback<T>& callback_;
+  Callback& callback_;
 };
 
-template<>
-class SplitAsManip<char> {
+template<typename Callback>
+class SplitAsManip<char, Callback> {
  public:
-  SplitAsManip(Callback<char>& callback) : callback_(callback) {}
+  SplitAsManip(Callback& callback) : callback_(callback) {}
   istream& operator()(istream& is) {
     string s; is >> s;
     for (i64 i = 0; i < s.size(); i++) callback_(i, &s[i]);
     return is;
   }
  private:
-  Callback<char>& callback_;
+  Callback& callback_;
 };
 
-template<typename T, typename enable_if<is_same<T, char>::value, nullptr_t>::type=nullptr>
-SplitAsManip<T> SplitAs(Callback<T>&& callback) {
-  return SplitAsManip<T>(callback);
+template<typename T, typename Callback, typename enable_if<!is_same<T, char>::value, nullptr_t>::type=nullptr>
+SplitAsManip<T, Callback> SplitAs(char delim, Callback&& callback) {
+  return SplitAsManip<T, Callback>(delim, callback);
 }
 
-template<typename T, typename enable_if<!is_same<T, char>::value, nullptr_t>::type=nullptr>
-SplitAsManip<T> SplitAs(char delim, Callback<T>&& callback) {
-  return SplitAsManip<T>(delim, callback);
+template<typename T, typename Callback, typename enable_if<is_same<T, char>::value, nullptr_t>::type=nullptr>
+SplitAsManip<T, Callback> SplitAs(Callback&& callback) {
+  return SplitAsManip<T, Callback>(callback);
 }
 
-template<typename T>
-istream& operator>>(istream& is, SplitAsManip<T>&& manip) {
+template<typename T, typename Callback>
+istream& operator>>(istream& is, SplitAsManip<T, Callback>&& manip) {
   return manip(is);
 }
 
@@ -191,9 +191,7 @@ template<typename C,
          typename enable_if<is_container<C>::value && !is_same<C, string>::value, nullptr_t>::type=nullptr>
 ostream& operator<<(ostream& os, const C& cont) noexcept {
   os << "[";
-  for (auto it = begin(cont); it != end(cont); it++) {
-    os << *it << (next(it) != end(cont) ? ", " : "");
-  }
+  for (auto it = begin(cont); it != end(cont); it++) os << *it << (next(it) != end(cont) ? ", " : "");
   return os << "]";
 }
 
@@ -202,9 +200,7 @@ template<typename T,
          typename enable_if<!is_same<T, char>::value, nullptr_t>::type=nullptr>
 ostream& operator<<(ostream& os, const T (&arr)[N]) noexcept {
   os << "[";
-  for (auto it = begin(arr); it != end(arr); it++) {
-    os << *it << (next(it) != end(arr) ? ", " : "");
-  }
+  for (auto it = begin(arr); it != end(arr); it++) os << *it << (next(it) != end(arr) ? ", " : "");
   return os << "]";
 }
 
@@ -264,6 +260,7 @@ vector<Task> tasks;
 
 void Solve() {
   i64 count=0, prev=0;
+  REP (i, 5) tasks.emplace_back(make_pair(ss[i], ts[i]));
   sort(tasks.begin(),
        tasks.end(),
        [](const Task& lhs, const Task& rhs) {return lhs.second < rhs.second;});
@@ -281,17 +278,20 @@ string& Clean(string* line) {
   for (char& c : *line) {
     if (c == '{') nested++;
     if (c == '}') nested--;
-    if (nested == 0 && c == ',') c = '/';
+    if (c == ',' && nested == 0) c = '/';
   }
   line->erase(remove(line->begin(), line->end(), ' '), line->end());
-  line->erase(remove_if(line->begin(), line->end(), [](char c){ return c == '{' || c == '}'; }), line->end());
+  line->erase(remove_if(line->begin(),
+                        line->end(),
+                        [](char c){ return c == '{' || c == '}'; }),
+              line->end());
   return *line;
 }
 
-void CsvToV(const string& s, vector<i64>* v) {
+void CsvToVec(const string& s, vector<i64>* v) {
   istringstream iss(s);
   for (string token; getline(iss, token, ',');) {
-    v->push_back(stoll(token));
+    v->emplace_back(stoll(token));
   }
 }
 
@@ -304,9 +304,9 @@ void Parse(const i64& i, string* s) {
     if (key == "N") {
       N = stoll(*s);
     } else if (key == "s") {
-      CsvToV(*s, &ss);
+      CsvToVec(*s, &ss);
     } else if (key == "t") {
-      CsvToV(*s, &ts);
+      CsvToVec(*s, &ts);
     }
   } else {
     throw "Invalid input format";
@@ -337,12 +337,13 @@ int main(int argc, char* argv[]) {
       return 1;
     }
   }
-  REP (i, 5) tasks.emplace_back(make_pair(ss[i], ts[i]));
 
   ASSERT(IN(N, 1, 1e5));
+  ASSERT(SizeOf(ss) == N);
+  ASSERT(SizeOf(ts) == N);
   FOREACH (it, tasks) ASSERT(IN(it->first, 0, 1e5) && IN(it->second, 0, 1e5) && it->first <= it->second);
 
-  DBG(N, tasks);
+  DBG(N, ss, ts);
   Solve();
   return 0;
 }

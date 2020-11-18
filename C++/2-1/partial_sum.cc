@@ -65,6 +65,20 @@ constexpr f64 kEps = 1e-12;
 constexpr f64 kPi = 3.14159265358979323846;
 
 /*
+ * Initialization Settings.
+ */
+struct Init {
+  static constexpr int kIosPrecision = 15;
+  static constexpr bool kAutoFlush = false;
+  Init() {
+    cin.tie(nullptr);
+    ios::sync_with_stdio(false);
+    cout << fixed << setprecision(kIosPrecision);
+    if (kAutoFlush) cout << unitbuf;
+  }
+} INIT;
+
+/*
  * Templates of Some Basic Operations.
  */
 template<typename T, typename U>
@@ -88,20 +102,6 @@ inline i64 SizeOf(const T (&t)[N]) {
 }
 
 /*
- * Initialization Settings.
- */
-struct Init {
-  static constexpr int kIosPrecision = 15;
-  static constexpr bool kAutoFlush = false;
-  Init() {
-    cin.tie(nullptr);
-    ios::sync_with_stdio(false);
-    cout << fixed << setprecision(kIosPrecision);
-    if (kAutoFlush) cout << unitbuf;
-  }
-} INIT;
-
-/*
  * IO Helper Functions.
  */
 struct Stdin {
@@ -122,105 +122,52 @@ struct Stdout {
   FILE* fd_;
 };
 
-struct has_emplace_back {
-  template<typename T>
-  static auto check(T&& t) -> decltype(t.emplace_back(), true_type {});
-  template<typename T>
-  static auto check(...) -> false_type;
-};
+//template<typename T>
+//using Callback = void (*)(const i64&, T*);
 
-struct has_emplace {
-  template<typename T>
-  static auto check(T&& t) -> decltype(t.emplace(), true_type {});
-  template<typename T>
-  static auto check(...) -> false_type;
-};
-
-template<typename T>
-struct is_sequential : public decltype(has_emplace_back::check<T>(declval<T>())) {};
-
-template<typename T>
-struct is_associative : public decltype(has_emplace::check<T>(declval<T>())) {};
-
-template<typename C, typename... Args>
-inline typename enable_if<is_sequential<C>::value, void>::type
-Append(C& cont, Args&&... args) {
-  cont.emplace_back(forward<Args>(args)...);
-}
-
-template<typename C, typename... Args>
-inline typename enable_if<is_associative<C>::value, void>::type
-Append(C& cont, Args&&... args) {
-  cont.emplace(forward<Args>(args)...);
-}
-
-template<typename T, typename Container, typename Preprocess>
+template<typename T, typename Callback>
 class SplitAsManip {
  public:
-  SplitAsManip(Container& cont,
-               char delim,
-               Preprocess& prep) : cont_(cont), delim_(delim), prep_(prep) {}
+  SplitAsManip(char delim, Callback& callback) : delim_(delim), callback_(callback) {}
   istream& operator()(istream& is) {
     i64 pos=0;
-    string token;
-    string dsv; is >> dsv; stringstream ss(dsv);
-    while (getline(ss, token, delim_)) {
-      T t; stringstream ss(token); ss >> t;
-      Append(cont_, prep_(pos, t));
-      pos++;
+    string dsv; is >> dsv; istringstream iss(dsv);
+    for (string token; getline(iss, token, delim_);) {
+      T t; istringstream parse(token); parse >> t;
+      callback_(pos++, &t);
     }
     return is;
   }
  private:
-  Container& cont_;
   char delim_;
-  Preprocess& prep_;
+  Callback& callback_;
 };
 
-template<typename Container, typename Preprocess>
-class SplitAsManip<char, Container, Preprocess> {
+template<typename Callback>
+class SplitAsManip<char, Callback> {
  public:
-  SplitAsManip(Container& cont,
-               char delim,
-               Preprocess& prep) : cont_(cont), prep_(prep) {}
+  SplitAsManip(Callback& callback) : callback_(callback) {}
   istream& operator()(istream& is) {
     string s; is >> s;
-    for (i64 i = 0; i < s.size(); i++) Append(cont_, prep_(i, s[i]));
+    for (i64 i = 0; i < s.size(); i++) callback_(i, &s[i]);
     return is;
   }
  private:
-  Container& cont_;
-  Preprocess& prep_;
+  Callback& callback_;
 };
 
-struct Skip {
-  template<typename T>
-  constexpr auto operator()(i64& i, T&& t) const noexcept -> decltype(forward<T>(t)) {
-    return forward<T>(t);
-  }
-};
-
-template<typename T,
-         typename Container,
-         typename Preprocess=Skip,
-         typename enable_if<is_same<T, char>::value, nullptr_t>::type=nullptr>
-SplitAsManip<T, Container, Preprocess> SplitAs(Container& cont,
-                                               Preprocess&& prep=Preprocess()) {
-  return SplitAsManip<T, Container, Preprocess>(cont, '\0', prep);
+template<typename T, typename Callback, typename enable_if<!is_same<T, char>::value, nullptr_t>::type=nullptr>
+SplitAsManip<T, Callback> SplitAs(char delim, Callback&& callback) {
+  return SplitAsManip<T, Callback>(delim, callback);
 }
 
-template<typename T,
-         typename Container,
-         typename Preprocess=Skip,
-         typename enable_if<!is_same<T, char>::value, nullptr_t>::type=nullptr>
-SplitAsManip<T, Container, Preprocess> SplitAs(Container& cont,
-                                               char delim=',',
-                                               Preprocess&& prep=Preprocess()) {
-  return SplitAsManip<T, Container, Preprocess>(cont, delim, prep);
+template<typename T, typename Callback, typename enable_if<is_same<T, char>::value, nullptr_t>::type=nullptr>
+SplitAsManip<T, Callback> SplitAs(Callback&& callback) {
+  return SplitAsManip<T, Callback>(callback);
 }
 
-template<typename T, typename Container, typename Preprocess>
-istream& operator>>(istream& is, SplitAsManip<T, Container, Preprocess>&& manip) {
+template<typename T, typename Callback>
+istream& operator>>(istream& is, SplitAsManip<T, Callback>&& manip) {
   return manip(is);
 }
 
@@ -244,9 +191,7 @@ template<typename C,
          typename enable_if<is_container<C>::value && !is_same<C, string>::value, nullptr_t>::type=nullptr>
 ostream& operator<<(ostream& os, const C& cont) noexcept {
   os << "[";
-  for (auto it = begin(cont); it != end(cont); it++) {
-    os << *it << (next(it) != end(cont) ? ", " : "");
-  }
+  for (auto it = begin(cont); it != end(cont); it++) os << *it << (next(it) != end(cont) ? ", " : "");
   return os << "]";
 }
 
@@ -255,9 +200,7 @@ template<typename T,
          typename enable_if<!is_same<T, char>::value, nullptr_t>::type=nullptr>
 ostream& operator<<(ostream& os, const T (&arr)[N]) noexcept {
   os << "[";
-  for (auto it = begin(arr); it != end(arr); it++) {
-    os << *it << (next(it) != end(arr) ? ", " : "");
-  }
+  for (auto it = begin(arr); it != end(arr); it++) os << *it << (next(it) != end(arr) ? ", " : "");
   return os << "]";
 }
 
@@ -310,14 +253,17 @@ void Debug(Head h, Tail... ts) {
 /*
  * User-defined Functions and Variables.
  */
-bool DFS(i64 k, const vector<i64>& a, i64 i=0) {
+i64 n, k;
+vector<i64> a;
+
+bool DFS(const i64& acc, i64 i=0) {
   if (k < 0 || (i >= SizeOf(a) && k > 0)) return false;
   if (k == 0) return true;
-  return DFS(k - a[i], a, i + 1) || DFS(k, a, i + 1);
+  return DFS(acc - a[i], i + 1) || DFS(acc, i + 1);
 }
 
-void Solve(i64 k, const vector<i64>& a) {
-  if (DFS(k, a)) {
+void Solve() {
+  if (DFS(k)) {
     cout << "Yes" << endl;
     return;
   }
@@ -339,9 +285,7 @@ int main(int argc, char* argv[]) {
     return 1;
   }
 
-  i64 n, k;
-  vector<i64> a;
-  cin >> n >> SplitAs<i64>(a, ',') >> k;
+  cin >> n >> SplitAs<i64>(',', [&](const i64& i, i64* v) { a.emplace_back(*v); }) >> k;
 
   ASSERT(IN(n, 1, 20));
   ASSERT(n == SizeOf(a));
@@ -349,6 +293,6 @@ int main(int argc, char* argv[]) {
   ASSERT(IN(k, -1e8, 1e8));
 
   DBG(n, a, k);
-  Solve(k, a);
+  Solve();
   return 0;
 }
