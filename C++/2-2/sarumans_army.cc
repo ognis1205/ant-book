@@ -254,46 +254,49 @@ void Debug(Head h, Tail... ts) {
  * User-defined Functions and Variables.
  */
 i64 N;
-string S;
+i64 R;
+vector<i64> X;
 
 void Solve() {
-  i64 l=0, r=SizeOf(S)-1;
-  bool left=false;
-  while (l <= r) {
-    for (i64 i=0; l + i <= r; i++) {
-      if (S[l + i] < S[r - i]) {
-        left = true;
-        break;
-      }
-      if (S[l + i] > S[r - i]) {
-        left = false;
-        break;
-      }
-    }
-    if (left) cout << S[l++];
-    else cout << S[r--];
+  i64 count=0;
+  i64 i=0;
+  sort(X.begin(), X.end(), less<i64>());
+  while (i < N) {
+    i64 cur = X[i++];
+    while (i < N && cur + R >= X[i]) i++;
+    cur = X[i - 1];
+    while (i < N && cur + R >= X[i]) i++;
+    count++;
   }
-  cout << endl;
+  cout << count << endl;
+}
+
+void Clean(string* line) {
+  line->erase(remove_if(line->begin(),
+                        line->end(),
+                        [](const char& c) { return c == ' ' || c == '{' || c == '}'; }),
+              line->end());
 }
 
 void Parse(string* line) {
-  i64 pos = 0;
-  string key;
-  if ((pos = line->find("=")) != string::npos) {
+  size_t pos=0;
+  if ((pos = line->find('=')) != string::npos) {
+    string key;
     key = line->substr(0, pos);
     line->erase(0, pos + 1);
     if (key == "N") {
       N = stoll(*line);
-    } else if (key == "S") {
-      S = *line;
+    } else if (key == "R") {
+      R = stoll(*line);
+    } else if (key == "X") {
+      istringstream iss(*line);
+      for (string token; getline(iss, token, ','); ) {
+        X.emplace_back(stoll(token));
+      }
     }
   } else {
     throw "Invalid input format";
   }
-}
-
-void Clean(string* line) {
-  line->erase(remove_if(line->begin(), line->end(), [](const char& c) {return c == ' ' || c == '"'; }), line->end());
 }
 
 /*
@@ -321,10 +324,11 @@ int main(int argc, char* argv[]) {
     }
   }
 
-  ASSERT(IN(N, 1, 2e3));
-  FOREACH(it, S) ASSERT(isupper(*it));
+  ASSERT(IN(N, 1, 1e3));
+  ASSERT(IN(R, 0, 1e3));
+  FOREACH (it, X) ASSERT(IN(*it, 0, 1e3));
 
-  DBG(N, S);
+  DBG(N, R, X);
   Solve();
   return 0;
 }
