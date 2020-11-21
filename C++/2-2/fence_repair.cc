@@ -260,15 +260,13 @@ template<typename T, size_t Capacity=1024>
 class Heap {
  public:
   Heap() : size_(0) { heap_ = new T[Capacity]; }
-
   ~Heap() { delete[] heap_; }
-
-  i64 size() { return size_; }
+  inline i64 size() const { return size_; }
 
   void push(const T t) {
     i64 i = size_;
     while (i > 0) {
-      i64 p = (i - 1) / 2;
+      auto p = parent(i);
       if (heap_[p] <= heap_[i]) break;
       swap(heap_[p], heap_[i]);
       i = p;
@@ -280,7 +278,7 @@ class Heap {
   T pop() {
     T ret = heap_[0]; heap_[0] = heap_[--size_];
     for (i64 i = 0; 2 * i + 1 < size_;) {
-      i64 l = 2 * i + 1, r = 2 * i + 2;
+      auto l = left(i), r = right(i);
       if (r < size_ && heap_[l] >= heap_[r]) l = r;
       if (heap_[l] > heap_[i]) break;
       swap(heap_[l], heap_[i]);
@@ -290,6 +288,9 @@ class Heap {
   }
 
  private:
+  static inline i64 left(const i64& i) { return 2 * i + 1; }
+  static inline i64 right(const i64& i) { return 2 * i + 2; }
+  static inline i64 parent(const i64& i) { return (i - 1) / 2; }
   i64 size_;
   T* heap_;
 };
@@ -369,7 +370,8 @@ int main(int argc, char* argv[]) {
     }
   }
 
-  ASSERT(IN(N, 1, 2e3));
+  ASSERT(IN(N, 1, 2e4));
+  FOREACH (it, L) ASSERT(IN(*it, 1, 5e4));
 
   DBG(N, L);
   Solve();
