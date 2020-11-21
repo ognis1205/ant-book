@@ -253,37 +253,58 @@ void Debug(Head h, Tail... ts) {
 /*
  * User-defined Functions and Variables.
  */
-using Task = pair<i64, i64>;
 i64 N;
-vector<i64> ss, ts;
-vector<Task> tasks;
+vector<i64> L;
+
+template<typename T, size_t Capacity=1024>
+class Heap {
+ public:
+  Heap() : size_(0) { heap_ = new T[Capacity]; }
+
+  ~Heap() { delete[] heap_; }
+
+  i64 size() { return size_; }
+
+  void push(const T t) {
+    i64 i = size_;
+    while (i > 0) {
+      i64 p = (i - 1) / 2;
+      if (heap_[p] <= heap_[i]) break;
+      swap(heap_[p], heap_[i]);
+      i = p;
+    }
+    heap_[i] = t;
+    size_++;
+  }
+
+  T pop() {
+    T ret = heap_[0]; heap_[0] = heap_[--size_];
+    for (i64 i = 0; 2 * i + 1 < size_;) {
+      i64 l = 2 * i + 1, r = 2 * i + 2;
+      if (r < size_ && heap_[l] >= heap_[r]) l = r;
+      if (heap_[l] > heap_[i]) break;
+      swap(heap_[l], heap_[i]);
+      i = l;
+    }
+    return ret;
+  }
+
+ private:
+  i64 size_;
+  T* heap_;
+};
 
 void Solve() {
-  i64 count=0, prev=0;
-  REP (i, N) tasks.emplace_back(make_pair(ss[i], ts[i]));
-  sort(tasks.begin(),
-       tasks.end(),
-       [](const Task& lhs, const Task& rhs) {return lhs.second < rhs.second;});
-  FOREACH (it, tasks) {
-    if (prev <= it->first) {
-      count++;
-      prev = it->second;
-    }
+  Heap<i64> h;
+  i64 ans=0;
+  FOREACH (it, L) h.push(*it);
+  while (h.size() > 1) {
+    auto l1 = h.pop();
+    auto l2 = h.pop();
+    ans += l1 + l2;
+    h.push(l1 + l2);
   }
-  cout << count << endl;
-}
-
-void Clean(string* line) {
-  i64 nested=0;
-  for (char& c : *line) {
-    if (c == '{') nested++;
-    if (c == '}') nested--;
-    if (c == ',' && nested == 0) c = '/';
-  }
-  line->erase(remove_if(line->begin(),
-                        line->end(),
-                        [](const char& c){ return c == '{' || c == '}' || c == ' '; }),
-              line->end());
+  cout << ans << endl;
 }
 
 void CsvToVec(const string& s, vector<i64>* v) {
@@ -293,22 +314,33 @@ void CsvToVec(const string& s, vector<i64>* v) {
   }
 }
 
-void Parse(const i64& i, string* s) {
+void Parse(const i64& i, string* line) {
   i64 pos=0;
   string key;
-  if ((pos = s->find("=")) != string::npos) {
-    key = s->substr(0, pos);
-    s->erase(0, pos + 1);
+  if ((pos = line->find("=")) != string::npos) {
+    key = line->substr(0, pos);
+    line->erase(0, pos + 1);
     if (key == "N") {
-      N = stoll(*s);
-    } else if (key == "s") {
-      CsvToVec(*s, &ss);
-    } else if (key == "t") {
-      CsvToVec(*s, &ts);
+      N = stoll(*line);
+    } else if (key == "L") {
+      CsvToVec(*line, &L);
     }
   } else {
     throw "Invalid input format";
   }
+}
+
+void Clean(string* line) {
+  i64 nested=0;
+  for (auto& c : *line) {
+    if (c == '{') nested++;
+    if (c == '}') nested--;
+    if (c == ',' && nested == 0) c = '/';
+  }
+  line->erase(remove_if(line->begin(),
+                        line->end(),
+                        [](const char& c) { return c == ' ' || c == '{' || c == '}'; }),
+              line->end());
 }
 
 /*
@@ -331,18 +363,15 @@ int main(int argc, char* argv[]) {
       Clean(&line);
       istringstream iss(line);
       iss >> SplitAs<string>('/', Parse);
-    } catch (char const* err) {
+    } catch (const char* err) {
       cerr << err << endl;
       return 1;
     }
   }
 
-  ASSERT(IN(N, 1, 1e5));
-  ASSERT(SizeOf(ss) == N);
-  ASSERT(SizeOf(ts) == N);
-  FOREACH (it, tasks) ASSERT(IN(it->first, 0, 1e5) && IN(it->second, 0, 1e5) && it->first <= it->second);
+  ASSERT(IN(N, 1, 2e3));
 
-  DBG(N, ss, ts);
+  DBG(N, L);
   Solve();
   return 0;
 }
