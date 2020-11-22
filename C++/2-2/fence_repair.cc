@@ -312,13 +312,13 @@ class Heap {
 
   void Push(const T t) {
     i64 i = size_;
+    heap_[i] = t;
     while (i > 0) {
       auto p = Parent(i);
       if (heap_[p] <= heap_[i]) break;
       swap(heap_[p], heap_[i]);
       i = p;
     }
-    heap_[i] = t;
     size_++;
   }
 
@@ -363,6 +363,7 @@ void Solve() {
   while (L.Size() > 1) {
     auto l1 = L.Pop();
     auto l2 = L.Pop();
+    DBG(l1, l2);
     ans += l1 + l2;
     L.Push(l1 + l2);
   }
