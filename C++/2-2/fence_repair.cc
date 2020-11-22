@@ -256,17 +256,17 @@ void Debug(Head h, Tail... ts) {
 i64 N;
 vector<i64> L;
 
-template<typename T, size_t Capacity=1024>
+template<typename T, size_t Capacity=32768>
 class Heap {
  public:
   Heap() : size_(0) { heap_ = new T[Capacity]; }
   ~Heap() { delete[] heap_; }
-  inline i64 size() const { return size_; }
+  inline i64 Size() const { return size_; }
 
-  void push(const T t) {
+  void Push(const T t) {
     i64 i = size_;
     while (i > 0) {
-      auto p = parent(i);
+      auto p = Parent(i);
       if (heap_[p] <= heap_[i]) break;
       swap(heap_[p], heap_[i]);
       i = p;
@@ -275,10 +275,10 @@ class Heap {
     size_++;
   }
 
-  T pop() {
+  T Pop() {
     T ret = heap_[0]; heap_[0] = heap_[--size_];
-    for (i64 i = 0; 2 * i + 1 < size_;) {
-      auto l = left(i), r = right(i);
+    for (i64 i = 0; HasChild(i);) {
+      auto l = Left(i), r = Right(i);
       if (r < size_ && heap_[l] >= heap_[r]) l = r;
       if (heap_[l] > heap_[i]) break;
       swap(heap_[l], heap_[i]);
@@ -288,9 +288,10 @@ class Heap {
   }
 
  private:
-  static inline i64 left(const i64& i) { return 2 * i + 1; }
-  static inline i64 right(const i64& i) { return 2 * i + 2; }
-  static inline i64 parent(const i64& i) { return (i - 1) / 2; }
+  static inline i64 Left(const i64& i) { return 2 * i + 1; }
+  static inline i64 Right(const i64& i) { return 2 * i + 2; }
+  static inline i64 Parent(const i64& i) { return (i - 1) / 2; }
+  inline i64 HasChild(const i64& i) const { return Left(i) < size_; }
   i64 size_;
   T* heap_;
 };
@@ -298,12 +299,12 @@ class Heap {
 void Solve() {
   Heap<i64> h;
   i64 ans=0;
-  FOREACH (it, L) h.push(*it);
-  while (h.size() > 1) {
-    auto l1 = h.pop();
-    auto l2 = h.pop();
+  FOREACH (it, L) h.Push(*it);
+  while (h.Size() > 1) {
+    auto l1 = h.Pop();
+    auto l2 = h.Pop();
     ans += l1 + l2;
-    h.push(l1 + l2);
+    h.Push(l1 + l2);
   }
   cout << ans << endl;
 }
