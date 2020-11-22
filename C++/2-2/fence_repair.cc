@@ -235,10 +235,10 @@ ostream& operator<<(ostream& os, const pair<T, U>& p) noexcept {
 void Debug() {}
 
 template<typename Head, typename... Tail>
-void Debug(Head h, Tail... ts) {
+void Debug(Head& h, Tail&&... ts) {
   const auto Size = sizeof...(Tail);
   cerr << h << (Size  ? ", " : "");
-  Debug(ts...);
+  Debug(forward<Tail&&>(ts)...);
 }
 #  define VER(...) do {\
                      cerr << "GCC version is " << __GNUC__ << "." << __GNUC_MINOR__ << "." << __GNUC_PATCHLEVEL__ << endl;\
@@ -253,15 +253,62 @@ void Debug(Head h, Tail... ts) {
 /*
  * User-defined Functions and Variables.
  */
-i64 N;
-vector<i64> L;
+struct SentinalType {
+  template<typename Rhs, typename enable_if<!is_same<Rhs, SentinalType>::value, nullptr_t>::type=nullptr>
+  friend bool operator==(const Rhs& rhs, SentinalType) {
+    return !*rhs;
+  }
+
+  template<typename Rhs, typename enable_if<!is_same<Rhs, SentinalType>::value, nullptr_t>::type=nullptr>
+  friend bool operator!=(const Rhs& rhs, SentinalType) {
+    return !(rhs == SentinalType {});
+  }
+
+  template<typename Lhs, typename enable_if<!is_same<Lhs, SentinalType>::value, nullptr_t>::type=nullptr>
+  friend bool operator==(SentinalType, const Lhs& lhs) {
+    return !*lhs;
+  }
+
+  template<typename Lhs, typename enable_if<!is_same<Lhs, SentinalType>::value, nullptr_t>::type=nullptr>
+  friend bool operator!=(SentinalType, const Lhs& lhs) {
+    return !(SentinalType{} == lhs);
+  }
+
+  friend bool operator==(SentinalType, SentinalType) {
+    return true;
+  }
+
+  friend bool operator!=(SentinalType, SentinalType) {
+    return false;
+  }
+};
 
 template<typename T, size_t Capacity=32768>
 class Heap {
  public:
-  Heap() : size_(0) { heap_ = new T[Capacity]; }
-  ~Heap() { delete[] heap_; }
-  inline i64 Size() const { return size_; }
+  Heap() : size_(0) {
+    heap_ = new T[Capacity];
+  }
+
+  ~Heap() {
+    delete heap_;
+  }
+
+  const T* begin() const {
+    return heap_;
+  }
+
+  SentinalType end() const {
+    return SentinalType {};
+  }
+
+  bool empty() const {
+    return size_;
+  }
+
+  inline i64 Size() const {
+    return size_;
+  }
 
   void Push(const T t) {
     i64 i = size_;
@@ -288,31 +335,44 @@ class Heap {
   }
 
  private:
-  static inline i64 Left(const i64& i) { return 2 * i + 1; }
-  static inline i64 Right(const i64& i) { return 2 * i + 2; }
-  static inline i64 Parent(const i64& i) { return (i - 1) / 2; }
-  inline i64 HasChild(const i64& i) const { return Left(i) < size_; }
+  static inline i64 Left(const i64& i) {
+    return 2 * i + 1;
+  }
+
+  static inline i64 Right(const i64& i) {
+    return 2 * i + 2;
+  }
+
+  static inline i64 Parent(const i64& i) {
+    return (i - 1) / 2;
+  }
+
+  inline i64 HasChild(const i64& i) const {
+    return Left(i) < size_;
+  }
+
   i64 size_;
   T* heap_;
 };
 
+i64 N;
+Heap<i64> L;
+
 void Solve() {
-  Heap<i64> h;
   i64 ans=0;
-  FOREACH (it, L) h.Push(*it);
-  while (h.Size() > 1) {
-    auto l1 = h.Pop();
-    auto l2 = h.Pop();
+  while (L.Size() > 1) {
+    auto l1 = L.Pop();
+    auto l2 = L.Pop();
     ans += l1 + l2;
-    h.Push(l1 + l2);
+    L.Push(l1 + l2);
   }
   cout << ans << endl;
 }
 
-void CsvToVec(const string& s, vector<i64>* v) {
+void CsvToHeap(const string& s, Heap<i64>* h) {
   istringstream iss(s);
   for (string token; getline(iss, token, ',');) {
-    v->emplace_back(stoll(token));
+    h->Push(stoll(token));
   }
 }
 
@@ -325,7 +385,7 @@ void Parse(const i64& i, string* line) {
     if (key == "N") {
       N = stoll(*line);
     } else if (key == "L") {
-      CsvToVec(*line, &L);
+      CsvToHeap(*line, &L);
     }
   } else {
     throw "Invalid input format";
