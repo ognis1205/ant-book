@@ -238,7 +238,7 @@ template<typename Head, typename... Tail>
 void Debug(Head& h, Tail&&... ts) {
   const auto Size = sizeof...(Tail);
   cerr << h << (Size  ? ", " : "");
-  Debug(forward<Tail&&>(ts)...);
+  Debug(forward<Tail>(ts)...);
 }
 #  define VER(...) do {\
                      cerr << "GCC version is " << __GNUC__ << "." << __GNUC_MINOR__ << "." << __GNUC_PATCHLEVEL__ << endl;\

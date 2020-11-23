@@ -238,7 +238,7 @@ template<typename Head, typename... Tail>
 void Debug(Head& h, Tail&&... ts) {
   const auto Size = sizeof...(Tail);
   cerr << h << (Size  ? ", " : "");
-  Debug(forward<Tail&&>(ts)...);
+  Debug(forward<Tail>(ts)...);
 }
 #  define VER(...) do {\
                      cerr << "GCC version is " << __GNUC__ << "." << __GNUC_MINOR__ << "." << __GNUC_PATCHLEVEL__ << endl;\
@@ -286,40 +286,21 @@ struct SentinalType {
 template<typename T, size_t Capacity=32768>
 class Heap {
  public:
-  Heap() : size_(0) {
-    heap_ = new T[Capacity];
-  }
+  Heap() : size_(0) { heap_ = new T[Capacity]; }
+  ~Heap() { delete[] heap_; }
+  inline const T* begin() const { return heap_; }
+  inline SentinalType end() const { return SentinalType {}; }
+  inline bool empty() const { return size_; }
+  inline i64 Size() const { return size_; }
 
-  ~Heap() {
-    delete heap_;
-  }
-
-  const T* begin() const {
-    return heap_;
-  }
-
-  SentinalType end() const {
-    return SentinalType {};
-  }
-
-  bool empty() const {
-    return size_;
-  }
-
-  inline i64 Size() const {
-    return size_;
-  }
-
-  void Push(const T t) {
-    i64 i = size_;
-    heap_[i] = t;
+  void Push(const T& t) {
+    i64 i = size_++; heap_[i] = t;
     while (i > 0) {
       auto p = Parent(i);
       if (heap_[p] <= heap_[i]) break;
       swap(heap_[p], heap_[i]);
       i = p;
     }
-    size_++;
   }
 
   T Pop() {
@@ -335,24 +316,12 @@ class Heap {
   }
 
  private:
-  static inline i64 Left(const i64& i) {
-    return 2 * i + 1;
-  }
-
-  static inline i64 Right(const i64& i) {
-    return 2 * i + 2;
-  }
-
-  static inline i64 Parent(const i64& i) {
-    return (i - 1) / 2;
-  }
-
-  inline i64 HasChild(const i64& i) const {
-    return Left(i) < size_;
-  }
-
   i64 size_;
   T* heap_;
+  static inline i64 Left(const i64& i) { return 2 * i + 1; }
+  static inline i64 Right(const i64& i) { return 2 * i + 2; }
+  static inline i64 Parent(const i64& i) { return (i - 1) / 2; }
+  inline i64 HasChild(const i64& i) const { return Left(i) < size_; }
 };
 
 i64 N;
@@ -363,7 +332,6 @@ void Solve() {
   while (L.Size() > 1) {
     auto l1 = L.Pop();
     auto l2 = L.Pop();
-    DBG(l1, l2);
     ans += l1 + l2;
     L.Push(l1 + l2);
   }
