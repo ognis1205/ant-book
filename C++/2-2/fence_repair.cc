@@ -253,43 +253,13 @@ void Debug(Head& h, Tail&&... ts) {
 /*
  * User-defined Functions and Variables.
  */
-struct SentinalType {
-  template<typename Rhs, typename enable_if<!is_same<Rhs, SentinalType>::value, nullptr_t>::type=nullptr>
-  friend bool operator==(const Rhs& rhs, SentinalType) {
-    return !*rhs;
-  }
-
-  template<typename Rhs, typename enable_if<!is_same<Rhs, SentinalType>::value, nullptr_t>::type=nullptr>
-  friend bool operator!=(const Rhs& rhs, SentinalType) {
-    return !(rhs == SentinalType {});
-  }
-
-  template<typename Lhs, typename enable_if<!is_same<Lhs, SentinalType>::value, nullptr_t>::type=nullptr>
-  friend bool operator==(SentinalType, const Lhs& lhs) {
-    return !*lhs;
-  }
-
-  template<typename Lhs, typename enable_if<!is_same<Lhs, SentinalType>::value, nullptr_t>::type=nullptr>
-  friend bool operator!=(SentinalType, const Lhs& lhs) {
-    return !(SentinalType{} == lhs);
-  }
-
-  friend bool operator==(SentinalType, SentinalType) {
-    return true;
-  }
-
-  friend bool operator!=(SentinalType, SentinalType) {
-    return false;
-  }
-};
-
 template<typename T, size_t Capacity=32768>
 class Heap {
  public:
   Heap() : size_(0) { heap_ = new T[Capacity]; }
   ~Heap() { delete[] heap_; }
   inline const T* begin() const { return heap_; }
-  inline SentinalType end() const { return SentinalType {}; }
+  inline const T* end() const { return &heap_[size_]; }
   inline bool empty() const { return size_; }
   inline i64 Size() const { return size_; }
 
