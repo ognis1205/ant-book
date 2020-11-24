@@ -37,6 +37,10 @@ using namespace std;
 #define RALL(cont) end(cont), begin(cont)
 #define FOREACH(it, cont) for (auto it = begin(cont); it != end(cont); it++)
 #define TRAV(e, cont) for (auto& e: cont)
+#define pb push_back
+#define mk make_pair
+#define fst first
+#define scd second
 #define ASSERT(expr...) assert((expr))
 #define IN(x, y, z) (y <= x && x <= z)
 #define X_T_X template<typename T>
@@ -124,7 +128,7 @@ inline void CIN(db& d) { str t; CIN(t); d = stod(t); }
 inline void CIN(ld& d) { str t; CIN(t); d = stold(t); }
 X_T_Us_X void CIN(T& t, Us&... us) { CIN(t); CIN(us...); }
 X_T_X void CIN(com<T>& c) { T a, b; CIN(a, b); c = {a, b}; }
-X_T_U_X void CIN(pair<T, U>& p) { CIN(p.first, p.second); }
+X_T_U_X void CIN(pair<T, U>& p) { CIN(p.fst, p.scd); }
 X_T_X void CIN(vec<T>& v) { TRAV(e, v) CIN(e); }
 X_T_S_X void CIN(arr<T, S>& a) { TRAV(e, a) CIN(e); }
 X_T_X void CINV(int& n, vec<T>& v) { v.resize(n); TRAV(e, v) CIN(e); }
@@ -179,9 +183,9 @@ X_T_X str STR(const T& cont) {
 
 X_T_U_X str STR(pair<T,U>& p) {
 #ifdef LOCAL
-  return "(" + STR(p.first) + ", " + STR(p.second) + ")";
+  return "(" + STR(p.fst) + ", " + STR(p.scd) + ")";
 #else
-  return ts(p.f)+" "+ts(p.s);
+  return ts(p.fst) + " " + ts(p.scd);
 #endif
 }
 
@@ -237,7 +241,7 @@ int main(int argc, char* argv[]) {
 
   FOR (i, 0, SIZE(k), 1)
     FOR (j, i, SIZE(k), 1)
-      kk.push_back(k[i] + k[j]);
+      kk.pb(k[i] + k[j]);
   sort(ALL(kk), less<int>());
 
   auto Solve = [&]() -> void {
