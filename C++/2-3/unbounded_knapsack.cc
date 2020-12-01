@@ -170,8 +170,8 @@ map<Key, int> memo;
 int Max(const int& i, const int&w) {
   if (memo.find({i, w}) != memo.end()) return memo[{i, w}];
   if (i == n) return 0;
-  if (items[i].fst > w) return memo[{i, w}] = Max(i + 1, w);
-  memo[{i, w}] = 0; REP (j, w / items[i].fst + 1) AMAX(memo[{i, w}], Max(i + 1, w - j * items[i].fst) + j * items[i].scd);
+  memo[{i, w}] = 0;
+  REP (j, w / items[i].fst + 1) AMAX(memo[{i, w}], Max(i + 1, w - j * items[i].fst) + j * items[i].scd);
   return memo[{i, w}];
 }
 
