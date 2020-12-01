@@ -169,9 +169,9 @@ using Key = pair<int, int>;
 map<Key, int> memo;
 
 int Max(const int& i, const int& w) {
-  if (i >= n) return 0;
-  if (items[i].fst > w) return Max(i + 1, w);
   if (memo.find({i, w}) != memo.end()) return memo[{i, w}];
+  if (i >= n) return 0;
+  if (items[i].fst > w) return memo[{i, w}] = Max(i + 1, w);
   return memo[{i, w}] = max(items[i].scd + Max(i + 1, w - items[i].fst), Max(i + 1, w));
 }
 
