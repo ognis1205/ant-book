@@ -224,6 +224,23 @@ X_T_Us_X void DEBUG(const T& t, Us&&... us) { cerr << STR(t); cerr << (sizeof...
 int n, m;
 vec<int> k, kk;
 
+void Solve() {
+  FOR (i, 0, SIZE(k), 1) {
+    FOR (j, i, SIZE(k), 1) {
+      kk.pb(k[i] + k[j]);
+    }
+  }
+  sort(ALL(kk));
+  FOR (i, 0, SIZE(k), 1) {
+    FOR (j, i, SIZE(k), 1) {
+      if (binary_search(ALL(kk), m - k[i] - k[j])) {
+        COUT("Yes"); ENDL(); return;
+      }
+    }
+  }
+  COUT("No"); ENDL(); return;
+}
+
 int main(int argc, char* argv[]) {
   if (argc != 2) {
     cerr << "Usage: " << argv[0] << " <input file name>" << endl;
@@ -239,18 +256,6 @@ int main(int argc, char* argv[]) {
   CIN(n); CIN(m); CINV(n, k);
   DBG(n, m, k);
 
-  FOR (i, 0, SIZE(k), 1)
-    FOR (j, i, SIZE(k), 1)
-      kk.pb(k[i] + k[j]);
-  sort(ALL(kk), less<int>());
-
-  auto Solve = [&]() -> void {
-    FOR (i, 0, SIZE(k), 1)
-      FOR (j, i, SIZE(k), 1)
-        if (binary_search(ALL(kk), m - k[i] - k[j])) { COUT("Yes"); ENDL(); return; };
-    COUT("No"); ENDL(); return;
-  };
   Solve();
-
   return 0;
 }
