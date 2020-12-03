@@ -34,8 +34,8 @@
 using namespace std;
 
 /* All Required 'define' Pre-Processors and 'typedef' Constants. */
-#define FOR(i, j, k, inc) for (int i = j; i < k; i += inc)
-#define RFOR(i, j, k, dec) for (int i = j; i >= k; i -= dec)
+#define FOR(i, j, k, inc) for (ll i = j; i < k; i += inc)
+#define RFOR(i, j, k, dec) for (ll i = j; i >= k; i -= dec)
 #define REP(i, j) FOR(i, 0, j, 1)
 #define RREP(i, j) RFOR(i, j, 0, 1)
 #define ALL(cont) begin(cont), end(cont)
@@ -107,14 +107,14 @@ struct STDOUT {
 };
 
 /* Helper Functions. */
-inline constexpr int PCNT(const int& x) { return __builtin_popcount(x); }
-inline constexpr int BITS(const int& x) { return 31 - __builtin_clz(x); }
+inline constexpr ll PCNT(const ll& x) { return static_cast<ll>(__builtin_popcountll(x)); }
+inline constexpr ll BITS(const ll& x) { return static_cast<ll>(31 - __builtin_clzll(x)); }
 inline ll CDIV(const ll& x, const ll& y) { return x / y + ((x ^ y) > 0 && x % y); }
 inline ll FDIV(const ll& x, const ll& y) { return x / y - ((x ^ y) < 0 && x % y); }
 X_T_X inline bool AMIN(T& x, const T& y) { return y < x ? x = y, 1 : 0; }
 X_T_X inline bool AMAX(T& x, const T& y) { return x < y ? x = y, 1 : 0; }
-X_T_X inline int SIZE(const T& t) { return static_cast<int>(t.size()); }
-X_T_S_X inline int SIZE(const T (&t)[S]) { return static_cast<int>(S); }
+X_T_X inline ll SIZE(const T& t) { return static_cast<ll>(t.size()); }
+X_T_S_X inline ll SIZE(const T (&t)[S]) { return static_cast<ll>(S); }
 X_T_Us_X inline void RESIZE(vector<T>& v, size_t&& s) { v.resize(s); }
 X_T_Us_X inline void RESIZE(vector<T>& v, size_t&& s, Us&&... ss) { v.resize(s); TRAV (e, v) RESIZE(e, fwd<Us>(ss)...); }
 X_T_U_X T FST(T l, T r, U p) { r++; ASSERT(l <= r); while (l < r) { T m = l + (r - l) / 2; p(m) ? r = m : l = m + 1; } return l; }
@@ -135,12 +135,12 @@ X_T_X void CIN(cop<T>& c) { T a, b; CIN(a, b); c = {a, b}; }
 X_T_U_X void CIN(pair<T, U>& p) { CIN(p.fst, p.scd); }
 X_T_X void CIN(vec<T>& v) { TRAV(e, v) CIN(e); }
 X_T_S_X void CIN(arr<T, S>& a) { TRAV(e, a) CIN(e); }
-X_T_X void CINV(int& n, vec<T>& v) { v.resize(n); TRAV(e, v) CIN(e); }
+X_T_X void CINV(ll& n, vec<T>& v) { v.resize(n); TRAV(e, v) CIN(e); }
 #define STR to_string
 str STR(char c) { return str(1, c); }
 str STR(const char* cs) { return static_cast<str>(cs); }
 str STR(const str& s) { return s; }
-str STR(const bool& b) { return STR(static_cast<int>(b)); }
+str STR(const bool& b) { return STR(static_cast<ll>(b)); }
 X_T_X str STR(const cop<T>& c) { ostringstream ss; ss << c; return ss.str(); }
 X_S_X str STR(const bits<S>& bs) { str s = ""; REP (i, S) s += char('0' + bs[i]); return s; }
 X_T_U_X str STR(const pair<T, U>& p);
@@ -181,20 +181,16 @@ int main(int argc, char* argv[]) {
     return 1;
   }
 
-  CIN(n); ASSERT(IN(n, 1, 1e2));
-  items.resize(n);
+  CIN(n); ASSERT(IN(n, 1, 1e2)); RESIZE(items, n);
   REP (i, n) {
     CIN(items[i].fst); CIN(items[i].scd);
-    ASSERT(IN(items[i].fst, 1, 1e7));
-    ASSERT(IN(items[i].scd, 1, 1e2));
+    ASSERT(IN(items[i].fst, 1, 1e7)); ASSERT(IN(items[i].scd, 1, 1e2));
   }
   CIN(W); ASSERT(IN(W, 1, 1e9));
 
-  DBG(n, W);
-  DBG(items);
+  DBG(n, W); DBG(items);
 
-  vvec<ll> dp;
-  RESIZE(dp, n + 1, n * 100 + 1);
+  vvec<ll> dp; RESIZE(dp, n + 1, n * 100 + 1);
   dp[0][0] = 0; REP (i, n * 100) dp[0][i + 1] = INF;
 
   REP (i, n) {
@@ -204,8 +200,7 @@ int main(int argc, char* argv[]) {
     }
   }
 
-  ll res;
-  REP (j, n * 100 + 1) if (dp[n][j] <= W) res = j;
+  ll res; REP (j, n * 100 + 1) if (dp[n][j] <= W) res = j;
   COUT(res);
 
   return 0;

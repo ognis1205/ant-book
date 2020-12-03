@@ -34,8 +34,8 @@
 using namespace std;
 
 /* All Required 'define' Pre-Processors and 'typedef' Constants. */
-#define FOR(i, j, k, inc) for (int i = j; i < k; i += inc)
-#define RFOR(i, j, k, dec) for (int i = j; i >= k; i -= dec)
+#define FOR(i, j, k, inc) for (ll i = j; i < k; i += inc)
+#define RFOR(i, j, k, dec) for (ll i = j; i >= k; i -= dec)
 #define REP(i, j) FOR(i, 0, j, 1)
 #define RREP(i, j) RFOR(i, j, 0, 1)
 #define ALL(cont) begin(cont), end(cont)
@@ -64,6 +64,8 @@ using str = string;
 X_S_X using bits = bitset<S>;
 X_T_S_X using arr = array<T, S>;
 X_T_X using vec = vector<T>;
+X_T_X using vvec = vector<vector<T>>;
+X_T_X using vvvec = vector<vector<vector<T>>>;
 X_T_X using cop = complex<T>;
 X_T_X using pque = priority_queue<T, vector<T>>;
 X_T_X using pquel = priority_queue<T, vector<T>, less<T>>;
@@ -105,14 +107,16 @@ struct STDOUT {
 };
 
 /* Helper Functions. */
-inline constexpr int PCNT(const int& x) { return __builtin_popcount(x); }
-inline constexpr int BITS(const int& x) { return 31 - __builtin_clz(x); }
+inline constexpr ll PCNT(const ll& x) { return static_cast<ll>(__builtin_popcountll(x)); }
+inline constexpr ll BITS(const ll& x) { return static_cast<ll>(31 - __builtin_clzll(x)); }
 inline ll CDIV(const ll& x, const ll& y) { return x / y + ((x ^ y) > 0 && x % y); }
 inline ll FDIV(const ll& x, const ll& y) { return x / y - ((x ^ y) < 0 && x % y); }
 X_T_X inline bool AMIN(T& x, const T& y) { return y < x ? x = y, 1 : 0; }
 X_T_X inline bool AMAX(T& x, const T& y) { return x < y ? x = y, 1 : 0; }
-X_T_X inline int SIZE(const T& t) { return static_cast<int>(t.size()); }
-X_T_S_X inline int SIZE(const T (&t)[S]) { return static_cast<int>(S); }
+X_T_X inline ll SIZE(const T& t) { return static_cast<ll>(t.size()); }
+X_T_S_X inline ll SIZE(const T (&t)[S]) { return static_cast<ll>(S); }
+X_T_Us_X inline void RESIZE(vector<T>& v, size_t&& s) { v.resize(s); }
+X_T_Us_X inline void RESIZE(vector<T>& v, size_t&& s, Us&&... ss) { v.resize(s); TRAV (e, v) RESIZE(e, fwd<Us>(ss)...); }
 X_T_U_X T FST(T l, T r, U p) { r++; ASSERT(l <= r); while (l < r) { T m = l + (r - l) / 2; p(m) ? r = m : l = m + 1; } return l; }
 X_T_U_X T LST(T l, T r, U p) { l--; ASSERT(l <= r); while (l < r) { T m = l + (r - l + 1) / 2; p(m) ? l = m : r = m - 1; } return l; }
 X_T_X void REMDUP(vec<T>& v) { sort(ALL(v)); v.erase(unique(ALL(v)), end(v)); }
@@ -131,12 +135,12 @@ X_T_X void CIN(cop<T>& c) { T a, b; CIN(a, b); c = {a, b}; }
 X_T_U_X void CIN(pair<T, U>& p) { CIN(p.fst, p.scd); }
 X_T_X void CIN(vec<T>& v) { TRAV(e, v) CIN(e); }
 X_T_S_X void CIN(arr<T, S>& a) { TRAV(e, a) CIN(e); }
-X_T_X void CINV(int& n, vec<T>& v) { v.resize(n); TRAV(e, v) CIN(e); }
+X_T_X void CINV(ll& n, vec<T>& v) { v.resize(n); TRAV(e, v) CIN(e); }
 #define STR to_string
 str STR(char c) { return str(1, c); }
 str STR(const char* cs) { return static_cast<str>(cs); }
 str STR(const str& s) { return s; }
-str STR(const bool& b) { return STR(static_cast<int>(b)); }
+str STR(const bool& b) { return STR(static_cast<ll>(b)); }
 X_T_X str STR(const cop<T>& c) { ostringstream ss; ss << c; return ss.str(); }
 X_S_X str STR(const bits<S>& bs) { str s = ""; REP (i, S) s += char('0' + bs[i]); return s; }
 X_T_U_X str STR(const pair<T, U>& p);
@@ -167,6 +171,7 @@ vec<Item> items;
 int W;
 using Key = pair<int, int>;
 map<Key, int> memo;
+vvec<int> dp;
 
 int Max(const int& i, const int& w) {
   if (memo.find({i, w}) != memo.end()) return memo[{i, w}];
@@ -187,12 +192,23 @@ int main(int argc, char* argv[]) {
     return 1;
   }
 
-  CIN(n); ASSERT(IN(n, 1, 1e2));
-  items.resize(n); REP (i, n) { CIN(items[i]); ASSERT(IN(items[i].fst, 1, 1e2)); ASSERT(IN(items[i].scd, 1, 1e2)); }
+  CIN(n); ASSERT(IN(n, 1, 1e2)); RESIZE(items, n);
+  REP (i, n) { CIN(items[i]); ASSERT(IN(items[i].fst, 1, 1e2)); ASSERT(IN(items[i].scd, 1, 1e2)); }
   CIN(W); ASSERT(IN(W, 1, 1e4));
   DBG(n, items, W);
 
-  COUT(Max(0, W));
+  RESIZE(dp, n + 1, W + 1);
+  REP (i, n + 1) dp[0][i] = 0;
+  REP (i, n) {
+    REP (j, W + 1) {
+      if (j == 0) dp[i + 1][j] == 0;
+      else if (j < items[i].fst) dp[i + 1][j] = dp[i][j];
+      else dp[i + 1][j] = max(dp[i][j], dp[i][j - items[i].fst] + items[i].scd);
+    }
+  }
+
+  COUT(dp[n][W]);
+  //COUT(Max(0, W));
 
   return 0;
 }
