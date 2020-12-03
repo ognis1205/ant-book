@@ -168,6 +168,7 @@ X_T_Us_X void DEBUG(const T& t, Us&&... us) { cerr << STR(t); cerr << (sizeof...
  */
 ll n, m, M;
 vec<ll> a;
+vvec<ll> dp;
 
 int main(int argc, char* argv[]) {
   if (argc != 2) {
@@ -184,8 +185,18 @@ int main(int argc, char* argv[]) {
   CIN(n, m); ASSERT(IN(n, 1, 1e3)); ASSERT(IN(m, 1, 1e3));
   CINV(n, a); REP(i, n) ASSERT(IN(a[i], 1, 1e3));
   CIN(M); ASSERT(IN(M, 1, 1e4));
+  DBG(n, m, M); DBG(a);
 
-  DBG(n, m, M);
-  DBG(a);
+  RESIZE(dp, n + 1, m + 1);
+  REP (i, n + 1) dp[i][0] = 1LL;
+  FOR (i, 0, n, 1) {
+    FOR (j, 1, m + 1, 1) {
+      if (j >= a[i] + 1) dp[i + 1][j] = dp[i + 1][j - 1] + dp[i][j] - dp[i][j - 1 - a[i]];
+      else dp[i + 1][j] = dp[i + 1][j - 1] + dp[i][j];
+    }
+  }
+  DBG(dp);
+  COUT(dp[n][m] % M); ENDL();
+
   return 0;
 }
