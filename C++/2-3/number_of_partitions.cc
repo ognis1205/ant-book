@@ -1,4 +1,4 @@
-/* $File: longest_increasing_subsequence.cc, $Timestamp: Thu Dec  3 17:47:03 2020 */
+/* $File: number_of_partitions.cc, $Timestamp: Fri Dec  4 02:14:04 2020 */
 #ifdef LOCAL
 #  include <algorithm>
 #  include <assert.h>
@@ -115,8 +115,8 @@ X_T_X inline bool AMIN(T& x, const T& y) { return y < x ? x = y, 1 : 0; }
 X_T_X inline bool AMAX(T& x, const T& y) { return x < y ? x = y, 1 : 0; }
 X_T_X inline ll SIZE(const T& t) { return static_cast<ll>(t.size()); }
 X_T_S_X inline ll SIZE(const T (&t)[S]) { return static_cast<ll>(S); }
-X_T_Us_X inline void RESIZE(vector<T>& v, size_t&& s) { v.resize(s); }
-X_T_Us_X inline void RESIZE(vector<T>& v, size_t&& s, Us&&... ss) { v.resize(s); TRAV (e, v) RESIZE(e, fwd<Us>(ss)...); }
+X_T_Us_X inline void RESIZE(vec<T>& v, size_t&& s) { v.resize(s); }
+X_T_Us_X inline void RESIZE(vec<T>& v, size_t&& s, Us&&... ss) { v.resize(s); TRAV (e, v) RESIZE(e, fwd<Us>(ss)...); }
 X_T_X inline void FILL(vec<T>& v, const T& t) { fill(ALL(v), t); }
 X_T_U_X T FST(T l, T r, U p) { r++; ASSERT(l <= r); while (l < r) { T m = l + (r - l) / 2; p(m) ? r = m : l = m + 1; } return l; }
 X_T_U_X T LST(T l, T r, U p) { l--; ASSERT(l <= r); while (l < r) { T m = l + (r - l + 1) / 2; p(m) ? l = m : r = m - 1; } return l; }
@@ -166,9 +166,8 @@ X_T_Us_X void DEBUG(const T& t, Us&&... us) { cerr << STR(t); cerr << (sizeof...
  *  - WRITE STUFF DOWN
  *  - DON'T GET STUCK ON ONE APPROACH
  */
-ll n;
-vec<ll> a;
-vec<ll> dp;
+ll n, m, M;
+vvec<ll> dp;
 
 int main(int argc, char* argv[]) {
   if (argc != 2) {
@@ -182,25 +181,18 @@ int main(int argc, char* argv[]) {
     return 1;
   }
 
-  CIN(n); ASSERT(IN(n, 1, 1e3));
-  CINV(n, a); REP (i, n) ASSERT(IN(a[i], 1, 1e6));
-  DBG(n, a);
+  CIN(n, m, M);
+  ASSERT(IN(n, 1, 1e3)); ASSERT(IN(m, 1, 1e3)); ASSERT(IN(M, 2, 1e4)); ASSERT(m <= n);
+  DBG(n, m, M);
 
-  //  RESIZE(dp, n);
-  //  RREP (i, n - 1) {
-  //    ll j = i + 1; while (j < n && a[j] <= a[i]) j++;
-  //    dp[i] = j < n ? dp[j] + 1 : 1;
-  //  }
-  //  REP (i, n) AMAX(dp[0], dp[i]);
-  //  COUT(dp[0]); ENDL();
-
-  RESIZE(dp, n); FILL(dp, INF);
-  REP (i, n) {
-    auto l = FST(0LL, n, [&](const ll& j) { return dp[j] > a[i]; });
-    if (l < n) dp[l] = a[i];
+  RESIZE(dp, n + 1, m + 1); FILL(dp[0], 1LL);
+  FOR (i, 1, n + 1, 1) {
+    FOR (j, 1, m + 1, 1) {
+      if (j > i) dp[i][j] = dp[i][j - 1];
+      else dp[i][j] = dp[i - j][j] + dp[i][j - 1];
+    }
   }
-
-  COUT(LST(0LL, n, [&](const ll& i) { return dp[i] < INF; }) + 1); ENDL();
+  COUT(dp[n][m] % M); ENDL();
 
   return 0;
 }
