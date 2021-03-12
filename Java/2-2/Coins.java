@@ -8,9 +8,13 @@ import java.util.regex.*;
 import java.util.stream.*;
 
 public class Coins {
-  private static FastScanner scanner;
+  private static FastScanner scan;
 
   private static Coins solver;
+
+  private List<Map.Entry<Integer, Integer>> coins;
+
+  private int A;
 
   public static void main(String[] args) {
     try {
@@ -23,40 +27,28 @@ public class Coins {
   }
 
   public Coins(FastScanner scan) {
+    this.coins = new ArrayList<Map.Entry<Integer, Integer>>();
+    Arrays.stream(scan.nextLine().split("\\s*,\\s*")).forEach(e -> {
+	String[] tokens = e.split("=");
+	this.coins.add(Pair.of(Integer.parseInt(tokens[0]), Integer.parseInt(tokens[1])));
+    });
+    this.A = Integer.parseInt(scan.nextLine());
   }
 
   private void solve() {
-  }
-
-  private static int getLowerBound(int[] target, int key) {
-    int l = 0;
-    int r = target.length - 1;
-    int m = (l + r) / 2;
-    while (true) {
-      if (target[m] == key || target[m] > key) {
-        r = m - 1;
-        if (r < l) return m;
-      } else {
-        l = m + 1;
-        if (r < l) return m < target.length - 1 ? m + 1 : -1;
-      }
-      m = (l + r) / 2;
+    this.coins.sort(Comparator.comparing(Map.Entry<Integer, Integer>::getKey).reversed());
+    int res = 0;
+    for (Map.Entry<Integer, Integer> e : this.coins) {
+      int num = Math.min(this.A / e.getKey(), e.getValue());
+      res    += num;
+      this.A -= num * e.getKey();
     }
+    System.out.println(res);
   }
 
-  private static int getUpperBound(int[] target, int key) {
-    int l = 0;
-    int r = target.length - 1;
-    int m = (l + r) / 2;
-    while (true) {
-      if (target[m] == key || target[m] < key) {
-        l = m + 1;
-        if (r < l) return m < target.length - 1 ? m + 1 : -1;
-      } else {
-        r = m - 1;
-        if (r < l) return m;
-      }
-      m = (l + r) / 2;
+  private static class Pair {
+    public static <F, S> Map.Entry<F, S> of(F fst, S scd) {
+      return new AbstractMap.SimpleEntry<>(fst, scd);
     }
   }
 
