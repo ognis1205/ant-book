@@ -1,4 +1,4 @@
-/* $File: LongestIncreasingSubsequence.java, $Timestamp: Mon Mar 15 13:31:46 2021 */
+/* $File: RepeatedCombination.java, $Timestamp: Fri Mar 26 13:32:59 2021 */
 import java.io.*;
 import java.util.*;
 import java.text.*;
@@ -7,68 +7,65 @@ import java.util.function.*;
 import java.util.regex.*;
 import java.util.stream.*;
 
-public class LongestIncreasingSubsequence {
+public class RepeatedCombination {
   private static FastScanner scan;
 
-  private static LongestIncreasingSubsequence solver;
+  private static RepeatedCombination solver;
 
   private int n;
 
+  private int m;
+
   private int[] a;
 
-  private int[] dp;
+  private int M;
+
+  private int[][] dp;
 
   public static void main(String[] args) {
     try {
       scan   = new FastScanner(new FileInputStream(new File(args[0])));
-      solver = new LongestIncreasingSubsequence(scan);
+      solver = new RepeatedCombination(scan);
       solver.solve();
     } catch (Exception e) {
       e.printStackTrace();
     }
   }
 
-  public LongestIncreasingSubsequence(FastScanner scan) {
-    n = Integer.parseInt(scan.nextLine());
-    a = Arrays.stream(scan.nextLine().split("\\s+")).mapToInt(e -> Integer.parseInt(e)).toArray();
-    dp = new int[n + 1];
-    for (int i = 0; i <= n; i++) dp[i] = Integer.MAX_VALUE;
+  public RepeatedCombination(FastScanner scan) {
+    this.n = Integer.parseInt(scan.nextLine());
+    this.m = Integer.parseInt(scan.nextLine());
+    this.a = Arrays.stream(scan.nextLine().split("\\s+")).mapToInt(e -> Integer.parseInt(e)).toArray();
+    this.M = Integer.parseInt(scan.nextLine());
+    this.dp = new int[this.n + 1][this.m + 1];
+    for (int i = 0; i <= this.m; i++) this.dp[0][i] = 0;
+    for (int i = 0; i <= this.n; i++) this.dp[i][0] = 1;
   }
 
   private void solve() {
-    for (int i = 0; i < n; i++) dp[getLowerBound(dp, a[i])] = a[i];
-    System.out.println(getLowerBound(dp, Integer.MAX_VALUE));
+    for (int i = 0; i < this.n; i++) {
+      for (int j = 1; j <= this.m; j++) {
+	if (j >= this.a[i] + 1) this.dp[i + 1][j] = this.dp[i + 1][j - 1] + this.dp[i][j] - this.dp[i][j - 1 - this.a[i]];
+	else this.dp[i + 1][j] = this.dp[i + 1][j - 1] + this.dp[i][j];
+      }
+    }
+    System.out.println(this.dp[this.n][this.m]);
   }
 
   private static int getLowerBound(int[] target, int key) {
-    int index = -1;
     int l = 0;
     int r = target.length - 1;
-    while (l <= r) {
-        int m = (l + r) / 2;
-        if (target[m] < key) {
-            l = m + 1;
-        } else if (target[m] > key) {
-            r = m - 1;
-        } else if (target[m] == key) {
-            index = m;
-            break;
-        }
+    int m = (l + r) / 2;
+    while (true) {
+      if (target[m] == key || target[m] > key) {
+        r = m - 1;
+        if (r < l) return m;
+      } else {
+        l = m + 1;
+        if (r < l) return m < target.length - 1 ? m + 1 : -1;
+      }
+      m = (l + r) / 2;
     }
-    return index;
-//    int l = 0;
-//    int r = target.length - 1;
-//    int m = (l + r) / 2;
-//    while (true) {
-//      if (target[m] == key || target[m] > key) {
-//        r = m - 1;
-//        if (r < l) return m;
-//      } else {
-//        l = m + 1;
-//        if (r < l) return m < target.length - 1 ? m + 1 : -1;
-//      }
-//      m = (l + r) / 2;
-//    }
   }
 
   private static int getUpperBound(int[] target, int key) {
