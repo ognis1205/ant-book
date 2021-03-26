@@ -52,38 +52,6 @@ public class RepeatedCombination {
     System.out.println(this.dp[this.n][this.m]);
   }
 
-  private static int getLowerBound(int[] target, int key) {
-    int l = 0;
-    int r = target.length - 1;
-    int m = (l + r) / 2;
-    while (true) {
-      if (target[m] == key || target[m] > key) {
-        r = m - 1;
-        if (r < l) return m;
-      } else {
-        l = m + 1;
-        if (r < l) return m < target.length - 1 ? m + 1 : -1;
-      }
-      m = (l + r) / 2;
-    }
-  }
-
-  private static int getUpperBound(int[] target, int key) {
-    int l = 0;
-    int r = target.length - 1;
-    int m = (l + r) / 2;
-    while (true) {
-      if (target[m] == key || target[m] < key) {
-        l = m + 1;
-        if (r < l) return m < target.length - 1 ? m + 1 : -1;
-      } else {
-        r = m - 1;
-        if (r < l) return m;
-      }
-      m = (l + r) / 2;
-    }
-  }
-
   private static class FastScanner implements Closeable {
     private InputStream in;
     private byte[] buffer;
