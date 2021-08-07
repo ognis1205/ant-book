@@ -1,5 +1,7 @@
-/* $File: Ants.java, $Timestamp: Sun Mar  7 21:50:07 2021 */
+/* $File: Ants, $Timestamp: Sat Aug  7 02:19:42 2021 */
 import java.io.*;
+import java.nio.*;
+import java.nio.charset.*;
 import java.util.*;
 import java.text.*;
 import java.math.*;
@@ -9,26 +11,44 @@ import java.util.stream.*;
 
 public class Ants {
   private static FastScanner scanner;
+
   private static Ants solver;
+
+  private int L;
+
+  private int n;
+
+  private int[] x;
 
   public static void main(String[] args) {
     try {
-      solver  = new Ants();
-      scanner = solver.new FastScanner(new FileInputStream(new File(args[0])));
+      scanner = new FastScanner(new FileInputStream(new File(args[0])));
+      solver = new Ants(scanner);
       solver.solve();
     } catch (Exception e) {
       e.printStackTrace();
     }
   }
 
+
+  public Ants(FastScanner scanner) {
+    L = Integer.parseInt(scanner.nextLine());
+    n = Integer.parseInt(scanner.nextLine());
+    FastScanner entries = scanner.scanLine();
+    x = new int[n];
+    for (int i = 0; i < n; i++)
+      x[i] = entries.nextInt();
+  }
+
   private void solve() {
-    int   L = Integer.parseInt(scanner.nextLine());
-    int   n = Integer.parseInt(scanner.nextLine());
-    int[] x = Arrays.stream(scanner.nextLine().split("\\s+")).mapToInt(s -> Integer.parseInt(s)).toArray();
-    int min = Arrays.stream(x).map(e -> Math.min(e, L - e)).max().getAsInt();
-    int max = Arrays.stream(x).map(e -> Math.max(e, L - e)).max().getAsInt();
-    System.out.println(min);
-    System.out.println(max);
+    int min = 0;
+    int max = 0;
+    for (int i = 0; i < n; i++) {
+      min = Math.max(min, Math.min(x[i], L - x[i]));
+      max = Math.max(max, Math.max(x[i], L - x[i]));
+    }
+    System.out.println("min = " + min);
+    System.out.println("max = " + max);
   }
 
   private static int getLowerBound(int[] target, int key) {
@@ -63,7 +83,7 @@ public class Ants {
     }
   }
 
-  private class FastScanner implements Closeable {
+  private static class FastScanner implements Closeable {
     private InputStream in;
     private byte[] buffer;
     private int ptr;
@@ -146,6 +166,10 @@ public class Ants {
       if (c == '\r') this.read();
       if (this.ptr > 0) this.buffer[this.ptr - 1] = ' ';
       return sb.toString();
+    }
+
+    public FastScanner scanLine() {
+      return new FastScanner(new ByteArrayInputStream(this.nextLine().getBytes(StandardCharsets.UTF_8)));
     }
 
     public int nextInt() {

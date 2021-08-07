@@ -1,5 +1,7 @@
-/* $File: Triangle.java, $Timestamp: Sun Mar  7 13:01:02 2021 */
+/* $File: Triangle, $Timestamp: Sat Aug  7 01:12:05 2021 */
 import java.io.*;
+import java.nio.*;
+import java.nio.charset.*;
 import java.util.*;
 import java.text.*;
 import java.math.*;
@@ -8,30 +10,63 @@ import java.util.regex.*;
 import java.util.stream.*;
 
 public class Triangle {
-  private static FastScanner scanner;
+  private static FastScanner scan;
+
   private static Triangle solver;
+    
+  private int n;
+    
+  private int[] a;
+    
+  private static void sort(int[] arr, int l, int h) {
+    if (l < h) {
+      int p = part(arr, l, h);
+      sort(arr, l, p - 1);
+      sort(arr, p + 1, h);
+    }
+  }
+
+  private static int part(int[] arr, int l, int h) {
+    int p = arr[h];
+    int i = l;
+    for (int j = l; j <= h; j++)
+      if (p > arr[j]) swap(arr, i++, j);
+    swap(arr, i, h);
+    return i;
+  }
+  
+  private static void swap(int[] arr, int i, int j) {
+    int t = arr[i];
+    arr[i] = arr[j];
+    arr[j] = t;
+  }
 
   public static void main(String[] args) {
-    solver  = new Triangle();
-    scanner = solver.new FastScanner("triangle.in");
     try {
+      scan   = new FastScanner(new FileInputStream(new File(args[0])));
+      solver = new Triangle(scan);
       solver.solve();
     } catch (Exception e) {
       e.printStackTrace();
     }
   }
 
+  public Triangle(FastScanner scanner) {
+    n = Integer.parseInt(scanner.nextLine());
+    a = new int[n];
+    FastScanner entries = scanner.scanLine();
+    for (int i = 0; i < n; i++)
+      a[i] = entries.nextInt();
+  }
+
   private void solve() {
-    Integer   n = Integer.valueOf(scanner.next());
-    Integer[] a = Arrays.stream(scanner.next().split(",")).map(x -> Integer.valueOf(x)).toArray(Integer[]::new);
-    Arrays.sort(a, Collections.reverseOrder());
-    for (int i = 0; i + 2 < n; i++) {
-      if (a[i] < a[i + 1] + a[i + 2]) {
-	System.out.println(a[i] + a[i + 1] + a[i + 2]);
+    sort(a, 0, n - 1);
+    for (int i = n - 1; i - 2 >= 0; i--)
+      if (a[i] < a[i - 1] + a[i - 2]) {
+	System.out.println(a[i] + a[i - 1] + a[i - 2]);
 	return;
       }
-    }
-    System.out.println("not found");
+    System.out.println(0);
   }
 
   private static int getLowerBound(int[] target, int key) {
@@ -66,100 +101,142 @@ public class Triangle {
     }
   }
 
-  private class FastScanner {
+  private static class FastScanner implements Closeable {
     private InputStream in;
     private byte[] buffer;
     private int ptr;
     private int len;
+    private boolean[] isSpace;
 
-    public FastScanner() {
-      this.in = System.in;
-      this.buffer = new byte[1024];
+    public FastScanner(InputStream in) {
+      this.in = in;
+      this.buffer = new byte[1 << 15];
       this.ptr = 0;
       this.len = 0;
+      this.isSpace = new boolean[128];
+      this.isSpace[' '] = this.isSpace['\n'] = this.isSpace['\r'] = this.isSpace['\t'] = true;
     }
 
-    public FastScanner(String input) {
-      try {
-	this.in = new FileInputStream(new File(input));
-	this.buffer = new byte[1024];
-	this.ptr = 0;
-	this.len = 0;
-      } catch (FileNotFoundException e) {
-	e.printStackTrace();
-      }
+    public void setSpace(char... cs) {
+      Arrays.fill(this.isSpace, false);
+      this.isSpace['\r'] = this.isSpace['\n'] = true;
+      for (char c : cs) this.isSpace[c] = true;
     }
-
-    private boolean hasNextByte() {
-      if (ptr < len) {
-        return true;
-      } else {
-        ptr = 0;
+        
+    private int read() {
+      if (this.len == -1) return -1;
+      if (this.ptr >= this.len) {
+        this.ptr = 0;
+        if (this.in == null) return this.len = -1;
         try {
-          len = in.read(buffer);
+          this.len = this.in.read(this.buffer);
         } catch (IOException e) {
-          e.printStackTrace();
+          throw new RuntimeException(e);
         }
-        if (len <= 0) return false;
+        if (this.len <= 0) return -1;
       }
-      return true;
-    }
-
-    private int readByte() {
-      if (hasNextByte()) return buffer[ptr++];
-      else return -1;
-    }
-
-    private boolean isPrintableChar(int c) {
-      return 33 <= c && c <= 126;
+      return this.buffer[this.ptr++];
     }
 
     public boolean hasNext() {
-      while (hasNextByte() && !this.isPrintableChar(buffer[ptr])) ptr++;
-      return hasNextByte();
+      int c = this.read();
+      while (c >= 0 && this.isSpace[c]) c = this.read();
+      if (c == -1) return false;
+      this.ptr--;
+      return true;
+    }
+
+    public void skipLine() {
+      if (this.ptr > 0 && this.buffer[this.ptr - 1] == '\n') {
+        this.buffer[this.ptr - 1] = ' ';
+        return;
+      }
+      int c = this.read();
+      if (c < 0) return;
+      while (c >= 0 && c != '\n' && c != '\r') c = this.read();
+      if (c == '\r') this.read();
+      if (this.ptr > 0) this.buffer[this.ptr - 1] = ' ';
     }
 
     public String next() {
-      if (!hasNext()) throw new NoSuchElementException();
+      if (!hasNext()) throw new InputMismatchException();
       StringBuilder sb = new StringBuilder();
-      int b = readByte();
-      while (this.isPrintableChar(b)) {
-        sb.appendCodePoint(b);
-        b = readByte();
+      int c = this.read();
+      while (c >= 0 && !this.isSpace[c]) {
+        sb.append((char)c);
+        c = this.read();
       }
       return sb.toString();
     }
+        
+    public String nextLine() {
+      StringBuilder sb = new StringBuilder();
+      if (this.ptr > 0 && this.buffer[this.ptr - 1] == '\n') {
+        this.buffer[this.ptr - 1] = ' ';
+        return "";
+      }
+      int c = this.read();
+      if (c < 0) throw new InputMismatchException();
+      while (c >= 0 && c != '\n' && c != '\r') {
+        sb.append((char)c);
+        c = this.read();
+      }
+      if (c == '\r') this.read();
+      if (this.ptr > 0) this.buffer[this.ptr - 1] = ' ';
+      return sb.toString();
+    }
+
+    public FastScanner scanLine() {
+      return new FastScanner(new ByteArrayInputStream(this.nextLine().getBytes(StandardCharsets.UTF_8)));
+    }
+
+    public int nextInt() {
+      if (!hasNext()) throw new InputMismatchException();
+      int c = this.read();
+      int sgn = 1;
+      if (c == '-') {
+        sgn = -1;
+        c = this.read();
+      }
+      int res = 0;
+      do {
+        if (c < '0' || c > '9') throw new InputMismatchException();
+        res *= 10;
+        res += c - '0';
+        c = this.read();
+      } while (c >= 0 && !this.isSpace[c]);
+      return res * sgn;
+    }
 
     public long nextLong() {
-      if (!hasNext()) throw new NoSuchElementException();
-      long n = 0;
-      boolean minus = false;
-      int b = readByte();
-      if (b == '-') {
-        minus = true;
-        b = readByte();
+      if (!hasNext()) throw new InputMismatchException();
+      int c = this.read();
+      int sgn = 1;
+      if (c == '-') {
+        sgn = -1;
+        c = this.read();
       }
-      if (b < '0' || '9' < b) throw new NumberFormatException();
-      while (true) {
-        if ('0' <= b && b <= '9') {
-          n *= 10;
-          n += b - '0';
-        } else if (b == -1 || !this.isPrintableChar(b)) {
-          return minus ? -n : n;
-        } else {
-          throw new NumberFormatException();
-        }
-        b = readByte();
-      }
-    }
-    public int nextInt() {
-      long nl = nextLong();
-      if (nl < Integer.MIN_VALUE || nl > Integer.MAX_VALUE) throw new NumberFormatException();
-      return (int) nl;
+      long res = 0;
+      do {
+        if (c < '0' || c > '9') throw new InputMismatchException();
+        res *= 10;
+        res += c - '0';
+        c = this.read();
+      } while (c >= 0 && !this.isSpace[c]);
+      return res * sgn;
     }
 
     public double nextDouble() {
       return Double.parseDouble(next());
+    }
+        
+    @Override
+    public void close() {
+      try {
+        if (in != null) in.close();
+      } catch (IOException e) {
+        e.printStackTrace();
+      }
     }
   }
 }
