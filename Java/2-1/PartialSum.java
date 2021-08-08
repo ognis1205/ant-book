@@ -1,5 +1,7 @@
-/* $File: PartialSum.java, $Timestamp: Mon Mar  8 20:11:56 2021 */
+/* $File: PartialSum, $Timestamp: Sat Aug  7 23:11:39 2021 */
 import java.io.*;
+import java.nio.*;
+import java.nio.charset.*;
 import java.util.*;
 import java.text.*;
 import java.math.*;
@@ -8,35 +10,46 @@ import java.util.regex.*;
 import java.util.stream.*;
 
 public class PartialSum {
-  private static FastScanner scanner;
+  private static FastScanner scan;
+
   private static PartialSum solver;
+
   private int n;
+
   private int[] a;
+
   private int k;
 
   public static void main(String[] args) {
     try {
-      solver = new PartialSum();
-      scanner = solver.new FastScanner(new FileInputStream(new File(args[0])));
+      scan   = new FastScanner(new FileInputStream(new File(args[0])));
+      solver = new PartialSum(scan);
       solver.solve();
     } catch (Exception e) {
       e.printStackTrace();
     }
   }
 
-  private void solve() {
-    this.n = Integer.parseInt(scanner.nextLine());
-    this.a = Arrays.stream(scanner.nextLine().split("\\s+")).mapToInt(e -> Integer.parseInt(e)).toArray();
-    this.k = Integer.parseInt(scanner.nextLine());
-    if (this.dfs(0, this.k)) System.out.println("yes");
-    else System.out.println("no");
-    return;
+  public PartialSum(FastScanner scan) {
+    n = Integer.parseInt(scan.nextLine());
+    a = new int[n];
+    FastScanner entries = scan.scanLine();
+    for (int i = 0; i < n; i++) 
+      a[i] = entries.nextInt();
+    k = Integer.parseInt(scan.nextLine());
   }
 
-  private boolean dfs(int i, int target) {
-    if (target == 0) return true;
-    if (i == this.n) return false;
-    return dfs(i + 1, target - this.a[i]) || dfs(i + 1, target);
+  private void solve() {
+    if (dfs(0, k)) System.out.println("Yes");
+    else System.out.println("No");
+  }
+
+  private boolean dfs(int i, int res) {
+    if (i < n && res >= 0) {
+      if (res == 0) return true;
+      return dfs(i + 1, res - a[i]) || dfs(i + 1, res);
+    }
+    return false;
   }
 
   private static int getLowerBound(int[] target, int key) {
@@ -71,7 +84,7 @@ public class PartialSum {
     }
   }
 
-  private class FastScanner implements Closeable {
+  private static class FastScanner implements Closeable {
     private InputStream in;
     private byte[] buffer;
     private int ptr;
@@ -154,6 +167,10 @@ public class PartialSum {
       if (c == '\r') this.read();
       if (this.ptr > 0) this.buffer[this.ptr - 1] = ' ';
       return sb.toString();
+    }
+
+    public FastScanner scanLine() {
+      return new FastScanner(new ByteArrayInputStream(this.nextLine().getBytes(StandardCharsets.UTF_8)));
     }
 
     public int nextInt() {
