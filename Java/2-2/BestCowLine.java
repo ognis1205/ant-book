@@ -1,5 +1,7 @@
-/* $File: BestCowLine.java, $Timestamp: Fri Mar 12 20:29:42 2021 */
+/* $File: BestCowLine, $Timestamp: Mon Aug  9 00:49:33 2021 */
 import java.io.*;
+import java.nio.*;
+import java.nio.charset.*;
 import java.util.*;
 import java.text.*;
 import java.math.*;
@@ -27,31 +29,65 @@ public class BestCowLine {
   }
 
   public BestCowLine(FastScanner scan) {
-    this.N = Integer.parseInt(scan.nextLine());
-    this.S = scan.nextLine();
+    N = Integer.parseInt(scan.nextLine());
+    S = scan.nextLine();
   }
 
   private void solve() {
-    System.out.println(this.N);
-    System.out.println(this.S);
     int l = 0;
-    int r = this.S.length() - 1;
-    StringBuilder sb = new StringBuilder();
+    int r = N - 1;
+    StringBuilder T = new StringBuilder();
     while (l <= r) {
-      boolean left = true;
-      for (int i = 0; l + i <= r; i++) {
-	if (this.S.charAt(l + i) < this.S.charAt(r - i)) {
-	  left = true;
-	  break;
-	} else if (this.S.charAt(l + i) > this.S.charAt(r - i)) {
-	  left = false;
-	  break;
-	}
-      }
-      if (left) sb.append(this.S.charAt(l++));
-      else sb.append(this.S.charAt(r--));
+      if (isLeft(l, r)) T.append(S.charAt(l++));
+      else T.append(S.charAt(r--));
     }
-    System.out.println(sb.toString());
+    System.out.println(T.toString());
+  }
+
+  private boolean isLeft(int l, int r) {
+    if (l >= r) {
+      return true;
+    } else {
+      if (S.charAt(l) < S.charAt(r)) {
+	return true;
+      } else if (S.charAt(l) > S.charAt(r)) {
+	return false;
+      } else {
+	return isLeft(l + 1, r - 1);
+      }
+    }
+  }
+
+  private static int getLowerBound(int[] target, int key) {
+    int l = 0;
+    int r = target.length - 1;
+    int m = (l + r) / 2;
+    while (true) {
+      if (target[m] == key || target[m] > key) {
+        r = m - 1;
+        if (r < l) return m;
+      } else {
+        l = m + 1;
+        if (r < l) return m < target.length - 1 ? m + 1 : -1;
+      }
+      m = (l + r) / 2;
+    }
+  }
+
+  private static int getUpperBound(int[] target, int key) {
+    int l = 0;
+    int r = target.length - 1;
+    int m = (l + r) / 2;
+    while (true) {
+      if (target[m] == key || target[m] < key) {
+        l = m + 1;
+        if (r < l) return m < target.length - 1 ? m + 1 : -1;
+      } else {
+        r = m - 1;
+        if (r < l) return m;
+      }
+      m = (l + r) / 2;
+    }
   }
 
   private static class FastScanner implements Closeable {
@@ -137,6 +173,10 @@ public class BestCowLine {
       if (c == '\r') this.read();
       if (this.ptr > 0) this.buffer[this.ptr - 1] = ' ';
       return sb.toString();
+    }
+
+    public FastScanner scanLine() {
+      return new FastScanner(new ByteArrayInputStream(this.nextLine().getBytes(StandardCharsets.UTF_8)));
     }
 
     public int nextInt() {
