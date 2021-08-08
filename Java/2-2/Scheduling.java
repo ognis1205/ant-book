@@ -44,9 +44,8 @@ public class Scheduling {
     FastScanner starts = scan.scanLine();
     FastScanner ends   = scan.scanLine();
     tasks = new ArrayList<>();
-    for (int i = 0; i < n; i++) {
+    for (int i = 0; i < n; i++)
       tasks.add(new Task(starts.nextInt(), ends.nextInt()));
-    }
     Collections.sort(tasks, new Comparator<Task>() {
 	@Override
 	public int compare(Task lhs, Task rhs) {
