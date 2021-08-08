@@ -1,5 +1,7 @@
-/* $File: LakeCounting.java, $Timestamp: Mon Mar  8 23:15:17 2021 */
+/* $File: LakeCounting, $Timestamp: Sun Aug  8 15:28:27 2021 */
 import java.io.*;
+import java.nio.*;
+import java.nio.charset.*;
 import java.util.*;
 import java.text.*;
 import java.math.*;
@@ -8,10 +10,34 @@ import java.util.regex.*;
 import java.util.stream.*;
 
 public class LakeCounting {
+  private static enum Direction {
+    UPLEFT(-1, 1),
+    UP(0, 1),
+    UPRIGHT(1, 1),
+    LEFT(-1, 0),
+    RIGHT(1, 0),
+    DONWLEFT(-1, -1),
+    DONW(0, -1),
+    DOWNRIGHT(1, -1);
+
+    private final int x;
+
+    private final int y;
+
+    private Direction(int x, int y) {
+      this.x = x;
+      this.y = y;
+    }
+  }
+
   private static FastScanner scan;
+
   private static LakeCounting solver;
+
   private int N;
+
   private int M;
+
   private char[][] lake;
 
   public static void main(String[] args) {
@@ -25,21 +51,24 @@ public class LakeCounting {
   }
 
   public LakeCounting(FastScanner scan) {
-    this.N = Integer.parseInt(scan.nextLine());
-    this.M = Integer.parseInt(scan.nextLine());
-    this.lake = new char[N][M];
-    for (int i = 0; i < this.N; i++) {
-      scan.nextLine().getChars(0, this.M, this.lake[i], 0);
+    N = Integer.parseInt(scan.nextLine());
+    M = Integer.parseInt(scan.nextLine());
+    lake = new char[N][M];
+    for (int r = 0; r < N; r++) {
+      String row = scan.nextLine();
+      for (int c = 0; c < N; c++) {
+	lake[r][c] = row.charAt(c);
+      }
     }
   }
 
   private void solve() {
     int count = 0;
-    for (int i = 0; i < this.N; i++) {
-      for (int j = 0; j < this.M; j++) {
-	if (this.lake[i][j] == 'W') {
+    for (int r = 0; r < N; r++) {
+      for (int c = 0; c < M; c++) {
+	if (lake[r][c] == 'W') {
 	  count++;
-	  this.dfs(i, j);
+	  dfs(r, c);
 	}
       }
     }
@@ -47,13 +76,47 @@ public class LakeCounting {
   }
 
   private void dfs(int x, int y) {
-    for (int i = -1; i < 2; i++) {
-      for (int j = -1; j < 2; j++) {
-	if (x + i >= 0 && x + i < this.N && y + j >= 0 && y + j < this.M && this.lake[x + i][y + j] == 'W') {
-	  this.lake[x + i][y + j] = '.';
-	  this.dfs(x + i, y + j);
-	}
+    lake[x][y] = '*';
+    for (Direction d : Direction.values()) {
+      int nx = x + d.x;
+      int ny = y + d.y;
+      if (isValid(nx, ny)) dfs(nx, ny);
+    }
+  }
+
+  private boolean isValid(int x, int y) {
+    return x >= 0 && x < N && y >= 0 && y < M && lake[x][y] == 'W';
+  }
+
+  private static int getLowerBound(int[] target, int key) {
+    int l = 0;
+    int r = target.length - 1;
+    int m = (l + r) / 2;
+    while (true) {
+      if (target[m] == key || target[m] > key) {
+        r = m - 1;
+        if (r < l) return m;
+      } else {
+        l = m + 1;
+        if (r < l) return m < target.length - 1 ? m + 1 : -1;
       }
+      m = (l + r) / 2;
+    }
+  }
+
+  private static int getUpperBound(int[] target, int key) {
+    int l = 0;
+    int r = target.length - 1;
+    int m = (l + r) / 2;
+    while (true) {
+      if (target[m] == key || target[m] < key) {
+        l = m + 1;
+        if (r < l) return m < target.length - 1 ? m + 1 : -1;
+      } else {
+        r = m - 1;
+        if (r < l) return m;
+      }
+      m = (l + r) / 2;
     }
   }
 
@@ -140,6 +203,10 @@ public class LakeCounting {
       if (c == '\r') this.read();
       if (this.ptr > 0) this.buffer[this.ptr - 1] = ' ';
       return sb.toString();
+    }
+
+    public FastScanner scanLine() {
+      return new FastScanner(new ByteArrayInputStream(this.nextLine().getBytes(StandardCharsets.UTF_8)));
     }
 
     public int nextInt() {
