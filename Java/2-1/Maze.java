@@ -1,5 +1,7 @@
-/* $File: Maze.java, $Timestamp: Wed Mar 10 03:52:19 2021 */
+/* $File: Maze, $Timestamp: Sun Aug  8 14:00:48 2021 */
 import java.io.*;
+import java.nio.*;
+import java.nio.charset.*;
 import java.util.*;
 import java.text.*;
 import java.math.*;
@@ -8,21 +10,48 @@ import java.util.regex.*;
 import java.util.stream.*;
 
 public class Maze {
+  private static class Coord {
+    public final int x;
+
+    public final int y;
+
+    private Coord(int x, int y) {
+      this.x = x;
+      this.y = y;
+    }
+  }
+
+  private static enum Direction {
+    UP(0, 1),
+    LEFT(-1, 0),
+    RIGHT(1, 0),
+    DOWN(0, -1);
+
+    private final int x;
+
+    private final int y;
+
+    private Direction(int x, int y) {
+      this.x = x;
+      this.y = y;
+    }
+  }
+
   private static FastScanner scan;
 
   private static Maze solver;
 
-  private int N;
+  private int n;
 
-  private int M;
+  private int m;
 
-  private char[][] maze;
+  private int[][] maze;
 
-  private int[][] cost;
+  private Coord start;
 
-  private Coord S;
+  private Coord goal;
 
-  private Coord G;
+  private Queue<Coord> que;
 
   public static void main(String[] args) {
     try {
@@ -35,87 +64,83 @@ public class Maze {
   }
 
   public Maze(FastScanner scan) {
-    this.N = Integer.parseInt(scan.nextLine());
-    this.M = Integer.parseInt(scan.nextLine());
-    this.maze = new char[this.N][this.M];
-    this.cost = new int[this.N][this.M];
-    for (int i = 0; i < this.N; i++) {
-      scan.nextLine().getChars(0, this.M, this.maze[i], 0);
-      for (int j = 0; j < this.M; j++) {
-	if (this.maze[i][j] == 'S') this.S = new Coord(i, j);
-	if (this.maze[i][j] == 'G') this.G = new Coord(i, j);
-	if (this.maze[i][j] == '#') {
-	  this.cost[i][j] = -1;
+    n = Integer.parseInt(scan.nextLine());
+    m = Integer.parseInt(scan.nextLine());
+    maze = new int[n][m];
+    for (int r = 0; r < n; r++) {
+      String row = scan.nextLine();
+      for (int c = 0; c < m; c++) {
+	char p = row.charAt(c);
+	if (p == 'S') {
+	  maze[r][c] = 0;
+	  start = new Coord(r, c);
+	} else if (p == 'G') {
+	  maze[r][c] = Integer.MAX_VALUE;
+	  goal  = new Coord(r, c);
+	} else if (p == '.') {
+	  maze[r][c] = Integer.MAX_VALUE;
 	} else {
-	  this.cost[i][j] = Integer.MAX_VALUE;
+	  maze[r][c] = -1;
 	}
       }
     }
+    que = new LinkedList<>();
   }
 
   private void solve() {
-    Queue<Coord> que = new LinkedList<Coord>();
-    que.add(this.S);
-    this.cost[this.S.x][this.S.y] = 0;
+    que.add(start);
+    bfs();
+    System.out.println(maze[goal.x][goal.y]);
+  }
+
+  private void bfs() {
     while (!que.isEmpty()) {
-      Coord cur = que.poll();
-      for (Dirs d : Dirs.values()) {
-	int x = cur.x + d.x;
-	int y = cur.y + d.y;
-	if (x >= 0 && x < this.N && y >= 0 && y < this.M && this.maze[x][y] != '#') {
-	  this.maze[x][y] = '#';
-	  this.cost[x][y] = this.cost[cur.x][cur.y] + 1;
-	  que.add(new Coord(x, y));
+      Coord c = que.remove();
+      if (c.x == goal.x && c.y == goal.y) break;
+      for (Direction d : Direction.values()) {
+	int nx = c.x + d.x;
+	int ny = c.y + d.y;
+	if (isValid(nx, ny)) {
+	  maze[nx][ny] = Math.min(maze[nx][ny], maze[c.x][c.y] + 1);
+	  que.add(new Coord(nx, ny));
 	}
       }
     }
-    System.out.println(this.cost[this.G.x][this.G.y]);
   }
 
-  private enum Dirs {
-    LEFT(-1, 0),
-    RIGHT(1, 0),
-    UP(0, 1),
-    DOWN(0, -1);
-
-    public int x;
-
-    public int y;
-
-    private Dirs(int x, int y) {
-      this.x = x;
-      this.y = y;
-    }
+  private boolean isValid(int x, int y) {
+    return x >= 0 && x < n && y >= 0 && y < m && maze[x][y] == Integer.MAX_VALUE;
   }
 
-  private class Coord {
-    public int x;
-
-    public int y;
-
-    public Coord(int x, int y) {
-      this.x = x;
-      this.y = y;
-    }
-
-    @Override
-    public boolean equals(Object that) {
-      if (!(that instanceof Coord)) {
-	return false;
+  private static int getLowerBound(int[] target, int key) {
+    int l = 0;
+    int r = target.length - 1;
+    int m = (l + r) / 2;
+    while (true) {
+      if (target[m] == key || target[m] > key) {
+        r = m - 1;
+        if (r < l) return m;
       } else {
-	Coord coord = (Coord) that;
-	return (this.x == coord.x && this.y == coord.y);
+        l = m + 1;
+        if (r < l) return m < target.length - 1 ? m + 1 : -1;
       }
+      m = (l + r) / 2;
     }
+  }
 
-    @Override
-    public int hashCode() {
-      return Objects.hash(this.getSigFields());
-    }
-
-    private Object[] getSigFields() {
-      Object[] ret = { this.x, this.y };
-      return ret;
+  private static int getUpperBound(int[] target, int key) {
+    int l = 0;
+    int r = target.length - 1;
+    int m = (l + r) / 2;
+    while (true) {
+      if (target[m] == key || target[m] < key) {
+        l = m + 1;
+        if (r < l) return m < target.length - 1 ? m + 1 : -1;
+      } else {
+        r = m - 1;
+        if (r < l) return m;
+      }
+      m = (l + r) / 2;
     }
   }
 
@@ -202,6 +227,10 @@ public class Maze {
       if (c == '\r') this.read();
       if (this.ptr > 0) this.buffer[this.ptr - 1] = ' ';
       return sb.toString();
+    }
+
+    public FastScanner scanLine() {
+      return new FastScanner(new ByteArrayInputStream(this.nextLine().getBytes(StandardCharsets.UTF_8)));
     }
 
     public int nextInt() {
