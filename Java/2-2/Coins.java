@@ -1,5 +1,7 @@
-/* $File: Coins.java, $Timestamp: Thu Mar 11 16:55:13 2021 */
+/* $File: Coins, $Timestamp: Sun Aug  8 17:51:25 2021 */
 import java.io.*;
+import java.nio.*;
+import java.nio.charset.*;
 import java.util.*;
 import java.text.*;
 import java.math.*;
@@ -8,11 +10,22 @@ import java.util.regex.*;
 import java.util.stream.*;
 
 public class Coins {
+  private static class Coin {
+    public final int amount;
+
+    public final int value;
+
+    public Coin(int amount, int value) {
+      this.amount = amount;
+      this.value = value;
+    }
+  }
+
   private static FastScanner scan;
 
   private static Coins solver;
 
-  private List<Map.Entry<Integer, Integer>> coins;
+  private List<Coin> coins;
 
   private int A;
 
@@ -27,28 +40,66 @@ public class Coins {
   }
 
   public Coins(FastScanner scan) {
-    this.coins = new ArrayList<Map.Entry<Integer, Integer>>();
-    Arrays.stream(scan.nextLine().split("\\s*,\\s*")).forEach(e -> {
-	String[] tokens = e.split("=");
-	this.coins.add(Pair.of(Integer.parseInt(tokens[0]), Integer.parseInt(tokens[1])));
-    });
-    this.A = Integer.parseInt(scan.nextLine());
+    coins = new ArrayList<>();
+    FastScanner entries = scan.scanLine();
+    for (int i = 0; i < 6; i++) {
+      String[] entry = entries.next().split("=");
+      coins.add(new Coin(Integer.parseInt(entry[1]), Integer.parseInt(entry[0])));
+    }
+    Collections.sort(coins, new Comparator<Coin>() {
+	@Override
+	public int compare(Coin lhs, Coin rhs) {
+	  if (lhs.value < rhs.value) {
+	    return 1;
+	  } else if (lhs.value == rhs.value) {
+	    return 0;
+	  } else {
+	    return -1;
+	  }
+	}
+      });
+    A = Integer.parseInt(scan.nextLine());
   }
 
   private void solve() {
-    this.coins.sort(Comparator.comparing(Map.Entry<Integer, Integer>::getKey).reversed());
-    int res = 0;
-    for (Map.Entry<Integer, Integer> e : this.coins) {
-      int num = Math.min(this.A / e.getKey(), e.getValue());
-      res    += num;
-      this.A -= num * e.getKey();
+    int count = 0;
+    for (Coin c : coins) {
+      int amount = Math.min(c.amount, A / c.value);
+      count += amount;
+      A -= c.value * amount;
     }
-    System.out.println(res);
+    System.out.println(count);
   }
 
-  private static class Pair {
-    public static <F, S> Map.Entry<F, S> of(F fst, S scd) {
-      return new AbstractMap.SimpleEntry<>(fst, scd);
+  private static int getLowerBound(int[] target, int key) {
+    int l = 0;
+    int r = target.length - 1;
+    int m = (l + r) / 2;
+    while (true) {
+      if (target[m] == key || target[m] > key) {
+        r = m - 1;
+        if (r < l) return m;
+      } else {
+        l = m + 1;
+        if (r < l) return m < target.length - 1 ? m + 1 : -1;
+      }
+      m = (l + r) / 2;
+    }
+  }
+
+  private static int getUpperBound(int[] target, int key) {
+    int l = 0;
+    int r = target.length - 1;
+    int m = (l + r) / 2;
+    while (true) {
+      if (target[m] == key || target[m] < key) {
+        l = m + 1;
+        if (r < l) return m < target.length - 1 ? m + 1 : -1;
+      } else {
+        r = m - 1;
+        if (r < l) return m;
+      }
+      m = (l + r) / 2;
     }
   }
 
@@ -135,6 +186,10 @@ public class Coins {
       if (c == '\r') this.read();
       if (this.ptr > 0) this.buffer[this.ptr - 1] = ' ';
       return sb.toString();
+    }
+
+    public FastScanner scanLine() {
+      return new FastScanner(new ByteArrayInputStream(this.nextLine().getBytes(StandardCharsets.UTF_8)));
     }
 
     public int nextInt() {
