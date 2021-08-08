@@ -1,5 +1,7 @@
-/* $File: Scheduling.java, $Timestamp: Fri Mar 12 13:11:40 2021 */
+/* $File: Scheduling, $Timestamp: Sun Aug  8 23:45:47 2021 */
 import java.io.*;
+import java.nio.*;
+import java.nio.charset.*;
 import java.util.*;
 import java.text.*;
 import java.math.*;
@@ -8,13 +10,24 @@ import java.util.regex.*;
 import java.util.stream.*;
 
 public class Scheduling {
+  private static class Task {
+    public final int start;
+
+    public final int end;
+
+    public Task(int start, int end) {
+      this.start = start;
+      this.end = end;
+    }
+  }
+
   private static FastScanner scan;
 
   private static Scheduling solver;
 
-  private int N;
+  private int n;
 
-  private List<Map.Entry<Integer, Integer>> schedules;
+  private List<Task> tasks;
 
   public static void main(String[] args) {
     try {
@@ -27,33 +40,68 @@ public class Scheduling {
   }
 
   public Scheduling(FastScanner scan) {
-    this.N = Integer.parseInt(scan.nextLine());
-    this.schedules = parse(Arrays.stream(scan.nextLine().split("\\s+")).mapToInt(e -> Integer.parseInt(e)).boxed().collect(Collectors.toList()),
-			   Arrays.stream(scan.nextLine().split("\\s+")).mapToInt(e -> Integer.parseInt(e)).boxed().collect(Collectors.toList()));
-    this.schedules.sort(Comparator.comparing(Map.Entry<Integer, Integer>::getValue));
+    n = Integer.parseInt(scan.nextLine());
+    FastScanner starts = scan.scanLine();
+    FastScanner ends   = scan.scanLine();
+    tasks = new ArrayList<>();
+    for (int i = 0; i < n; i++) {
+      tasks.add(new Task(starts.nextInt(), ends.nextInt()));
+    }
+    Collections.sort(tasks, new Comparator<Task>() {
+	@Override
+	public int compare(Task lhs, Task rhs) {
+	  if (lhs.end < rhs.end) {
+	    return -1;
+	  } else if (lhs.end == rhs.end) {
+	    return 0;
+	  } else {
+	    return 1;
+	  }
+	}
+      });
   }
 
   private void solve() {
-    int res = 0;
-    while (!this.schedules.isEmpty()) {
-      this.schedules.stream().forEach(e -> System.out.println(e.getKey() + " " + e.getValue()));
-      System.out.println();
-      int cur = this.schedules.remove(0).getValue();
-      res++;
-      this.schedules = this.schedules.stream().filter(e -> e.getKey() >= cur).collect(Collectors.toCollection(LinkedList::new));
+    int count = 0;
+    int curr  = 0;
+    for (Task t : tasks) {
+      if (curr < t.start) {
+	count++;
+	curr = t.end;
+      }
     }
-    System.out.println(res);
+    System.out.println(count);
   }
 
-  private static List<Map.Entry<Integer, Integer>> parse(List<Integer> s, List<Integer> t) {
-    return IntStream.range(0, Math.min(s.size(), t.size()))
-      .mapToObj(i -> Schedule.of(s.get(i), t.get(i)))
-      .collect(Collectors.toCollection(LinkedList::new));
+  private static int getLowerBound(int[] target, int key) {
+    int l = 0;
+    int r = target.length - 1;
+    int m = (l + r) / 2;
+    while (true) {
+      if (target[m] == key || target[m] > key) {
+        r = m - 1;
+        if (r < l) return m;
+      } else {
+        l = m + 1;
+        if (r < l) return m < target.length - 1 ? m + 1 : -1;
+      }
+      m = (l + r) / 2;
+    }
   }
 
-  private static class Schedule {
-    public static Map.Entry<Integer, Integer> of(Integer fst, Integer scd) {
-      return new AbstractMap.SimpleEntry<Integer, Integer>(fst, scd);
+  private static int getUpperBound(int[] target, int key) {
+    int l = 0;
+    int r = target.length - 1;
+    int m = (l + r) / 2;
+    while (true) {
+      if (target[m] == key || target[m] < key) {
+        l = m + 1;
+        if (r < l) return m < target.length - 1 ? m + 1 : -1;
+      } else {
+        r = m - 1;
+        if (r < l) return m;
+      }
+      m = (l + r) / 2;
     }
   }
 
@@ -140,6 +188,10 @@ public class Scheduling {
       if (c == '\r') this.read();
       if (this.ptr > 0) this.buffer[this.ptr - 1] = ' ';
       return sb.toString();
+    }
+
+    public FastScanner scanLine() {
+      return new FastScanner(new ByteArrayInputStream(this.nextLine().getBytes(StandardCharsets.UTF_8)));
     }
 
     public int nextInt() {
