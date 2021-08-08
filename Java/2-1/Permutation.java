@@ -1,5 +1,7 @@
-/* $File: Permutation.java, $Timestamp: Wed Mar 10 20:44:48 2021 */
+/* $File: Permutation, $Timestamp: Sun Aug  8 17:00:31 2021 */
 import java.io.*;
+import java.nio.*;
+import java.nio.charset.*;
 import java.util.*;
 import java.text.*;
 import java.math.*;
@@ -8,13 +10,25 @@ import java.util.regex.*;
 import java.util.stream.*;
 
 public class Permutation {
+  private static interface Callback {
+    public void call(int arr[], int k);
+  }
+
   private static FastScanner scan;
 
   private static Permutation solver;
 
-  private int length;
+  private int n;
 
-  private int[] array;
+  private int k;
+
+  private int[] a;
+
+  private static void swap(int[] arr, int l, int r) {
+    int t = arr[l];
+    arr[l] = arr[r];
+    arr[r] = t;
+  }
 
   public static void main(String[] args) {
     try {
@@ -27,40 +41,67 @@ public class Permutation {
   }
 
   public Permutation(FastScanner scan) {
-    this.length = Integer.parseInt(scan.nextLine());
-    this.array  = Arrays.stream(scan.nextLine().split("\\s+")).mapToInt(e -> Integer.parseInt(e)).toArray();
-    Arrays.stream(this.array).forEach(e -> System.out.println(e));
+    n = Integer.parseInt(scan.nextLine());
+    k = Integer.parseInt(scan.nextLine());
+    a = new int[n];
+    FastScanner entries = scan.scanLine();
+    for (int i = 0; i < n; i++)
+      a[i] = entries.nextInt();
   }
 
   private void solve() {
-    this.perm(this.array, 0, this.length, new Callback() {
-	public void call(int[] arr) {
-	  Arrays.stream(arr).forEach(e -> System.out.print(e));
-	  System.out.println();
+    permute(0, new Callback() {
+	@Override
+	public void call(int[] arr, int k) {
+	  for (int i = 0; i < k; i++)
+	    System.out.print(arr[i]);
+	  System.out.print('\n');
 	}
-    });
+      });
   }
 
-  private void perm(int[] arr, int s, int e, Callback func) {
-    if (s == e) {
-      func.call(arr);
+  private void permute(int i, Callback callback) {
+    if (i == k) {
+      callback.call(a, k);
     } else {
-      for (int i = s; i < e; i++) {
-	swap(arr, s, i);
-	perm(arr, s + 1, e, func);
-	swap(arr, s, i);
+      for (int j = i; j < n; j++) {
+	swap(a, i, j);
+	permute(i + 1, callback);
+	swap(a, i, j);
       }
     }
   }
 
-  private void swap(int[] arr,  int i, int j) {
-    int t = arr[i];
-    arr[i] = arr[j];
-    arr[j] = t;
+  private static int getLowerBound(int[] target, int key) {
+    int l = 0;
+    int r = target.length - 1;
+    int m = (l + r) / 2;
+    while (true) {
+      if (target[m] == key || target[m] > key) {
+        r = m - 1;
+        if (r < l) return m;
+      } else {
+        l = m + 1;
+        if (r < l) return m < target.length - 1 ? m + 1 : -1;
+      }
+      m = (l + r) / 2;
+    }
   }
 
-  private interface Callback {
-    public void call(int [] arr);
+  private static int getUpperBound(int[] target, int key) {
+    int l = 0;
+    int r = target.length - 1;
+    int m = (l + r) / 2;
+    while (true) {
+      if (target[m] == key || target[m] < key) {
+        l = m + 1;
+        if (r < l) return m < target.length - 1 ? m + 1 : -1;
+      } else {
+        r = m - 1;
+        if (r < l) return m;
+      }
+      m = (l + r) / 2;
+    }
   }
 
   private static class FastScanner implements Closeable {
@@ -146,6 +187,10 @@ public class Permutation {
       if (c == '\r') this.read();
       if (this.ptr > 0) this.buffer[this.ptr - 1] = ' ';
       return sb.toString();
+    }
+
+    public FastScanner scanLine() {
+      return new FastScanner(new ByteArrayInputStream(this.nextLine().getBytes(StandardCharsets.UTF_8)));
     }
 
     public int nextInt() {
