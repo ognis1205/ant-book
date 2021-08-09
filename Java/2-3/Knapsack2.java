@@ -1,5 +1,7 @@
-/* $File: Knapsack2.java, $Timestamp: Sun Mar 14 12:40:14 2021 */
+/* $File: Knapsack2, $Timestamp: Tue Aug 10 02:25:50 2021 */
 import java.io.*;
+import java.nio.*;
+import java.nio.charset.*;
 import java.util.*;
 import java.text.*;
 import java.math.*;
@@ -12,15 +14,19 @@ public class Knapsack2 {
 
   private static Knapsack2 solver;
 
-  private int n;
+  private static int MAX_VALUE = 1_000;
+
+  private static long MAX_WEIGHT = 100_000_000_000L;
+
+  private int N;
+
+  private int W;
 
   private int[] w;
 
   private int[] v;
 
-  private int W;
-
-  private int[][] dp;
+  private long[][] dp;
 
   public static void main(String[] args) {
     try {
@@ -33,31 +39,36 @@ public class Knapsack2 {
   }
 
   public Knapsack2(FastScanner scan) {
-    this.n = Integer.parseInt(scan.nextLine());
-    this.w = new int[this.n];
-    this.v = new int[this.n];
-    for (int i = 0; i < this.n; i++) {
-      String[] tokens = scan.nextLine().split("\\s+");
-      this.w[i] = Integer.parseInt(tokens[0]);
-      this.v[i] = Integer.parseInt(tokens[1]);
+    String[] header = scan.nextLine().split("\\s+");
+    N = Integer.parseInt(header[0]);
+    W = Integer.parseInt(header[1]);
+    w = new int[N + 1];
+    v = new int[N + 1];
+    w[0] = v[0] = 0;
+    for (int i = 1; i <= N; i++) {
+      String[] entry = scan.nextLine().split("\\s+");
+      w[i] = Integer.parseInt(entry[0]);
+      v[i] = Integer.parseInt(entry[1]);
     }
-    this.W = Integer.parseInt(scan.nextLine());
-    this.dp = new int[this.n + 1][this.W + 1];
-    for (int i = 0; i < this.W + 1; i++) this.dp[0][i] = 0;
-    for (int i = 0; i < this.n + 1; i++) this.dp[i][0] = 0;
+    dp = new long[N + 1][MAX_VALUE * N + 1];
+    for (int i = 0; i < N + 1; i++)
+      for (int j = 0; j < MAX_VALUE * N + 1; j++)
+	dp[i][j] = MAX_WEIGHT;
+    for (int i = 0; i < N + 1; i++)
+      dp[i][0] = 0;
   }
 
   private void solve() {
-    for (int i = 0; i < this.n; i++) {
-      for (int j = 0; j < this.W; j++) {
-	if (j + 1 >= this.w[i]) {
-	  this.dp[i + 1][j + 1] = Math.max(this.dp[i + 1][j + 1 - this.w[i]] + this.v[i], this.dp[i][j + 1]);
-	} else {
-	  this.dp[i + 1][j + 1] = this.dp[i][j + 1];
-	}
+    for (int i = 1; i <= N; i++) {
+      for (int j = 1; j <= MAX_VALUE * N; j++) {
+	if (v[i] > j) dp[i][j] = dp[i - 1][j];
+	else dp[i][j] = Math.min(dp[i - 1][j - v[i]] + w[i], dp[i - 1][j]);
       }
     }
-    System.out.println(this.dp[this.n][this.W]);
+    int res = 0;
+    for (int i = 1; i <= MAX_VALUE * N; i++)
+      if (dp[N][i] <= W) res = i;
+    System.out.println(res);
   }
 
   private static int getLowerBound(int[] target, int key) {
@@ -175,6 +186,10 @@ public class Knapsack2 {
       if (c == '\r') this.read();
       if (this.ptr > 0) this.buffer[this.ptr - 1] = ' ';
       return sb.toString();
+    }
+
+    public FastScanner scanLine() {
+      return new FastScanner(new ByteArrayInputStream(this.nextLine().getBytes(StandardCharsets.UTF_8)));
     }
 
     public int nextInt() {
