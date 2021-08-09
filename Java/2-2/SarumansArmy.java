@@ -1,5 +1,7 @@
-/* $File: SarumansArmy.java, $Timestamp: Sat Mar 13 11:03:12 2021 */
+/* $File: SarumansArmy, $Timestamp: Mon Aug  9 14:25:24 2021 */
 import java.io.*;
+import java.nio.*;
+import java.nio.charset.*;
 import java.util.*;
 import java.text.*;
 import java.math.*;
@@ -29,23 +31,58 @@ public class SarumansArmy {
   }
 
   public SarumansArmy(FastScanner scan) {
-    this.N = Integer.parseInt(scan.nextLine());
-    this.R = Integer.parseInt(scan.nextLine());
-    this.X = Arrays.stream(scan.nextLine().split("\\s+")).mapToInt(e -> Integer.parseInt(e)).toArray();
-    Arrays.sort(this.X);
+    N = Integer.parseInt(scan.nextLine());
+    R = Integer.parseInt(scan.nextLine());
+    FastScanner entries = scan.scanLine();
+    X = new int[N];
+    for (int i = 0; i < N; i++)
+      X[i] = entries.nextInt();
   }
 
   private void solve() {
-    int res = 0;
-    int i = 0;
-    while (i < this.X.length) {
-      int s = this.X[i++];
-      while (i < this.X.length && s + this.R <= this.X[i]) i++;
-      int p = this.X[i - 1];
-      while (i < this.X.length && p + this.R >= this.X[i]) i++;
-      res++;
+    int count = 0;
+    int prev  = 0;
+    for (int i = 0; i < N; i++) {
+      if (X[i] <= X[prev] + R) {
+	continue;
+      } else {
+	count++;
+	prev = i;
+      }
     }
-    System.out.println(res);
+    System.out.println(count);
+  }
+
+  private static int getLowerBound(int[] target, int key) {
+    int l = 0;
+    int r = target.length - 1;
+    int m = (l + r) / 2;
+    while (true) {
+      if (target[m] == key || target[m] > key) {
+        r = m - 1;
+        if (r < l) return m;
+      } else {
+        l = m + 1;
+        if (r < l) return m < target.length - 1 ? m + 1 : -1;
+      }
+      m = (l + r) / 2;
+    }
+  }
+
+  private static int getUpperBound(int[] target, int key) {
+    int l = 0;
+    int r = target.length - 1;
+    int m = (l + r) / 2;
+    while (true) {
+      if (target[m] == key || target[m] < key) {
+        l = m + 1;
+        if (r < l) return m < target.length - 1 ? m + 1 : -1;
+      } else {
+        r = m - 1;
+        if (r < l) return m;
+      }
+      m = (l + r) / 2;
+    }
   }
 
   private static class FastScanner implements Closeable {
@@ -131,6 +168,10 @@ public class SarumansArmy {
       if (c == '\r') this.read();
       if (this.ptr > 0) this.buffer[this.ptr - 1] = ' ';
       return sb.toString();
+    }
+
+    public FastScanner scanLine() {
+      return new FastScanner(new ByteArrayInputStream(this.nextLine().getBytes(StandardCharsets.UTF_8)));
     }
 
     public int nextInt() {
