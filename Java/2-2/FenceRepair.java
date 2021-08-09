@@ -1,5 +1,7 @@
-/* $File: FenceRepair.java, $Timestamp: Sat Mar 13 12:13:53 2021 */
+/* $File: FenceRepair, $Timestamp: Mon Aug  9 14:50:43 2021 */
 import java.io.*;
+import java.nio.*;
+import java.nio.charset.*;
 import java.util.*;
 import java.text.*;
 import java.math.*;
@@ -8,6 +10,81 @@ import java.util.regex.*;
 import java.util.stream.*;
 
 public class FenceRepair {
+  private static class PriorityQueue<T> {
+    private List<T> tree;
+
+    private int tail;
+
+    private Comparator<T> comparator;
+
+    public PriorityQueue(Comparator<T> comparator) {
+      this.tree = new ArrayList<>();
+      this.tail = -1;
+      this.comparator = comparator;
+    }
+
+    public void add(T value) {
+      tree.add(value);
+      up(++tail);
+    }
+
+    public T remove() {
+      if (!isEmpty()) {
+	T ret = tree.get(0);
+	swap(0, tail);
+	tree.remove(tail--);
+	down(0);
+	return ret;
+      } else {
+	return null;
+      }
+    }
+
+    public int size() {
+      return this.tail + 1;
+    }
+
+    public boolean isEmpty() {
+      return this.tail < 0;
+    }
+
+    private void down(int i) {
+      if (tree.size() - 1 < left(i)) return;
+      if (comparator.compare(tree.get(i), tree.get(left(i))) < 0) {
+	swap(i, left(i));
+	down(left(i));
+      } else if (tree.size() - 1 >= right(i) && comparator.compare(tree.get(i), tree.get(right(i))) < 0) {
+	swap(i, right(i));
+	down(right(i));
+      }
+    }
+
+    private void up(int i) {
+      if (i == 0) return;
+      if (comparator.compare(tree.get(i), tree.get(parent(i))) > 0) {
+	swap(i, parent(i));
+	up(parent(i));
+      }
+    }
+
+    private void swap(int l, int r) {
+      Collections.swap(tree, l, r);
+    }
+
+    private static int parent(int child) {
+      if (child % 2 == 0) return (child - 1) / 2;
+      else return child / 2;
+    }
+
+    private static int left(int parent) {
+      return 2 * parent + 1;
+    }
+
+    private static int right(int parent) {
+      return 2 * parent + 2;
+    }
+  }
+
   private static FastScanner scan;
 
   private static FenceRepair solver;
@@ -27,20 +104,24 @@ public class FenceRepair {
   }
 
   public FenceRepair(FastScanner scan) {
-    this.N = Integer.parseInt(scan.nextLine());
-    this.L = new PriorityQueue<Integer>();
-    Arrays.stream(scan.nextLine().split("\\s+")).forEach(e -> {
-	this.L.add(Integer.valueOf(e));
-    });
+    N = Integer.parseInt(scan.nextLine());
+    L = new PriorityQueue<>(new Comparator<Integer>() {
+	@Override
+	public int compare(Integer lhs, Integer rhs) {
+	  return -1 * lhs.compareTo(rhs);
+	}
+      });;
+    FastScanner entries = scan.scanLine();
+    for (int i = 0; i < N; i++)
+      L.add(entries.nextInt());
   }
 
   private void solve() {
     int res = 0;
-    while (this.L.size() > 1) {
-      Integer l = this.L.poll();
-      Integer r = this.L.poll();
-      res += l + r;
-      this.L.add(l + r);
+    while (L.size() > 1) {
+      int cost = L.remove() + L.remove();
+      res += cost;
+      L.add(cost);
     }
     System.out.println(res);
   }
@@ -160,6 +241,10 @@ public class FenceRepair {
       if (c == '\r') this.read();
       if (this.ptr > 0) this.buffer[this.ptr - 1] = ' ';
       return sb.toString();
+    }
+
+    public FastScanner scanLine() {
+      return new FastScanner(new ByteArrayInputStream(this.nextLine().getBytes(StandardCharsets.UTF_8)));
     }
 
     public int nextInt() {
