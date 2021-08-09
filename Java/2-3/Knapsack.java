@@ -1,5 +1,7 @@
-/* $File: Knapsack.java, $Timestamp: Sat Mar 13 13:32:57 2021 */
+/* $File: Knapsack, $Timestamp: Mon Aug  9 19:29:36 2021 */
 import java.io.*;
+import java.nio.*;
+import java.nio.charset.*;
 import java.util.*;
 import java.text.*;
 import java.math.*;
@@ -8,17 +10,45 @@ import java.util.regex.*;
 import java.util.stream.*;
 
 public class Knapsack {
+  private static class Key {
+    public final int w;
+
+    public final int v;
+
+    public Key(int w, int v) {
+      this.w = w;
+      this.v = v;
+    }
+
+    @Override
+    public boolean equals(Object that) {
+      if (that instanceof Key) {
+	Key key = (Key) that;
+	return this.w == key.w && this.v == key.v;
+      } else {
+	return false;
+      }
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hash(w, v);
+    }
+  }
+
   private static FastScanner scan;
 
   private static Knapsack solver;
 
   private int n;
 
-  private List<Map.Entry<Integer, Integer>> goods;
+  private int[] w;
+
+  private int[] v;
 
   private int W;
 
-  private int[][] dp;
+  private Map<Key, Integer> memo;
 
   public static void main(String[] args) {
     try {
@@ -31,31 +61,66 @@ public class Knapsack {
   }
 
   public Knapsack(FastScanner scan) {
-    this.n = Integer.parseInt(scan.nextLine());
-    this.goods = new ArrayList<Map.Entry<Integer, Integer>>();
-    IntStream.range(0, this.n).forEach(i -> {
-	String[] tokens = scan.nextLine().split("\\s+");
-	this.goods.add(Pair.of(Integer.valueOf(tokens[0]), Integer.valueOf(tokens[1])));
-    });
-    this.W = Integer.parseInt(scan.nextLine());
-    this.dp = new int[100][10000];
-    for (int[] r : this.dp) Arrays.fill(r, -1);
+    n = Integer.parseInt(scan.nextLine());
+    w = new int[n];
+    v = new int[n];
+    for (int i = 0; i < n; i++) {
+      String[] entry = scan.nextLine().split("\\s+");
+      w[i] = Integer.parseInt(entry[0]);
+      v[i] = Integer.parseInt(entry[1]);
+    }
+    W = Integer.parseInt(scan.nextLine());
+    memo = new HashMap<Key, Integer>();
   }
 
   private void solve() {
-    System.out.println(memo(0, this.W));
+    System.out.println(dp(n - 1, W));
   }
 
-  private int memo(int i, int w) {
-    if (i >= this.n) return 0;
-    if (this.dp[i][w] >= 0) return dp[i][w];
-    if (this.goods.get(i).getKey() > w) return dp[i][w] = memo(i + 1, w);
-    return dp[i][w] = Math.max(this.goods.get(i).getValue() + memo(i + 1, w - this.goods.get(i).getKey()), memo(i + 1, w));
+  private int dp(int i, int r) {
+    if (i < 0 || r <= 0) {
+      return 0;
+    } else {
+      Key key = new Key(i, r);
+      if (memo.containsKey(key)) {
+	return memo.get(key);
+      } else {
+	if (w[i] > r) memo.put(key, dp(i - 1, r));
+	else memo.put(key, Math.max(dp(i - 1, r - w[i]) + v[i], dp(i - 1, r)));
+	return memo.get(key);
+      }
+    }
   }
 
-  private static class Pair {
-    public static Map.Entry<Integer, Integer> of(int w, int v) {
-      return new AbstractMap.SimpleEntry<Integer, Integer>(w, v);
+  private static int getLowerBound(int[] target, int key) {
+    int l = 0;
+    int r = target.length - 1;
+    int m = (l + r) / 2;
+    while (true) {
+      if (target[m] == key || target[m] > key) {
+        r = m - 1;
+        if (r < l) return m;
+      } else {
+        l = m + 1;
+        if (r < l) return m < target.length - 1 ? m + 1 : -1;
+      }
+      m = (l + r) / 2;
+    }
+  }
+
+  private static int getUpperBound(int[] target, int key) {
+    int l = 0;
+    int r = target.length - 1;
+    int m = (l + r) / 2;
+    while (true) {
+      if (target[m] == key || target[m] < key) {
+        l = m + 1;
+        if (r < l) return m < target.length - 1 ? m + 1 : -1;
+      } else {
+        r = m - 1;
+        if (r < l) return m;
+      }
+      m = (l + r) / 2;
     }
   }
 
@@ -142,6 +207,10 @@ public class Knapsack {
       if (c == '\r') this.read();
       if (this.ptr > 0) this.buffer[this.ptr - 1] = ' ';
       return sb.toString();
+    }
+
+    public FastScanner scanLine() {
+      return new FastScanner(new ByteArrayInputStream(this.nextLine().getBytes(StandardCharsets.UTF_8)));
     }
 
     public int nextInt() {
