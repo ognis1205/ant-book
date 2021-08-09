@@ -1,5 +1,7 @@
-/* $File: Knapsack3.java, $Timestamp: Mon Mar 15 03:10:20 2021 */
+/* $File: Knapsack3, $Timestamp: Tue Aug 10 03:59:20 2021 */
 import java.io.*;
+import java.nio.*;
+import java.nio.charset.*;
 import java.util.*;
 import java.text.*;
 import java.math.*;
@@ -14,16 +16,6 @@ public class Knapsack3 {
 
   private int n;
 
-  private int max_v;
-
-  private int[] v;
-
-  private int[] w;
-
-  private int W;
-
-  private int[][] dp;
-
   public static void main(String[] args) {
     try {
       scan   = new FastScanner(new FileInputStream(new File(args[0])));
@@ -35,38 +27,41 @@ public class Knapsack3 {
   }
 
   public Knapsack3(FastScanner scan) {
-    this.n = Integer.parseInt(scan.nextLine());
-    this.v = new int[this.n];
-    this.w = new int[this.n];
-    this.max_v = 0;
-    for (int i = 0; i < this.n; i++) {
-      String[] tokens = scan.nextLine().split("\\s+");
-      this.w[i] = Integer.parseInt(tokens[0]);
-      this.v[i] = Integer.parseInt(tokens[1]);
-      this.max_v = Math.max(this.max_v, this.v[i]);
-    }
-    this.W = Integer.parseInt(scan.nextLine());
-    this.dp = new int[this.n + 1][this.n * max_v];
-    for (int i = 0; i < this.n * this.max_v; i++) this.dp[0][i] = 1000000000;
-    this.dp[0][0] = 0;
   }
 
   private void solve() {
-    for (int i = 0; i < this.n; i++) {
-      for (int j = 0; j < this.n * this.max_v; j++) {
-	if (j >= this.v[i]) {
-	  this.dp[i + 1][j] = Math.min(this.dp[i][j - this.v[i]] + this.w[i], this.dp[i][j]);
-	} else {
-	  this.dp[i + 1][j] = this.dp[i][j];
-	}
+  }
+
+  private static int getLowerBound(int[] target, int key) {
+    int l = 0;
+    int r = target.length - 1;
+    int m = (l + r) / 2;
+    while (true) {
+      if (target[m] == key || target[m] > key) {
+        r = m - 1;
+        if (r < l) return m;
+      } else {
+        l = m + 1;
+        if (r < l) return m < target.length - 1 ? m + 1 : -1;
       }
+      m = (l + r) / 2;
     }
-    int res = 0;
-    for (int j = 0; j < this.n * this.max_v; j++) {
-      System.out.println(this.dp[this.n][j]);
-      if (this.dp[this.n][j] <= this.W) res = j;
+  }
+
+  private static int getUpperBound(int[] target, int key) {
+    int l = 0;
+    int r = target.length - 1;
+    int m = (l + r) / 2;
+    while (true) {
+      if (target[m] == key || target[m] < key) {
+        l = m + 1;
+        if (r < l) return m < target.length - 1 ? m + 1 : -1;
+      } else {
+        r = m - 1;
+        if (r < l) return m;
+      }
+      m = (l + r) / 2;
     }
-    System.out.println(res);
   }
 
   private static class FastScanner implements Closeable {
@@ -152,6 +147,10 @@ public class Knapsack3 {
       if (c == '\r') this.read();
       if (this.ptr > 0) this.buffer[this.ptr - 1] = ' ';
       return sb.toString();
+    }
+
+    public FastScanner scanLine() {
+      return new FastScanner(new ByteArrayInputStream(this.nextLine().getBytes(StandardCharsets.UTF_8)));
     }
 
     public int nextInt() {
