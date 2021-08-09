@@ -16,6 +16,14 @@ public class Knapsack3 {
 
   private int n;
 
+  private int W;
+
+  private int[] w;
+
+  private int[] v;
+
+  private int[][] dp;
+
   public static void main(String[] args) {
     try {
       scan   = new FastScanner(new FileInputStream(new File(args[0])));
@@ -27,9 +35,31 @@ public class Knapsack3 {
   }
 
   public Knapsack3(FastScanner scan) {
+    n = Integer.parseInt(scan.nextLine());
+    w = new int[n + 1];
+    v = new int[n + 1];
+    w[0] = v[0] = 0;
+    for (int i = 1; i <= n; i++) {
+      String[] entry = scan.nextLine().split("\\s+");
+      w[i] = Integer.parseInt(entry[0]);
+      v[i] = Integer.parseInt(entry[1]);
+    }
+    W = Integer.parseInt(scan.nextLine());
+    dp = new int[n + 1][W + 1];
+    for (int i = 0; i < W + 1; i++)
+      dp[0][i] = 0;
+    for (int i = 0; i < n + 1; i++)
+      dp[i][0] = 0;
   }
 
   private void solve() {
+    for (int i = 1; i < n + 1; i++) {
+      for (int j = 1; j < W + 1; j++) {
+	if (w[i] > j) dp[i][j] = dp[i - 1][j];
+	else dp[i][j] = Math.max(dp[i - 1][j], dp[i][j - w[i]] + v[i]);
+      }
+    }
+    System.out.println(dp[n][W]);
   }
 
   private static int getLowerBound(int[] target, int key) {
