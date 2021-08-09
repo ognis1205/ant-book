@@ -1,5 +1,7 @@
-/* $File: LongestCommonSubsequence.java, $Timestamp: Sat Mar 13 15:45:35 2021 */
+/* $File: LongestCommonSubsequence, $Timestamp: Tue Aug 10 03:31:45 2021 */
 import java.io.*;
+import java.nio.*;
+import java.nio.charset.*;
 import java.util.*;
 import java.text.*;
 import java.math.*;
@@ -33,27 +35,27 @@ public class LongestCommonSubsequence {
   }
 
   public LongestCommonSubsequence(FastScanner scan) {
-    this.n = Integer.parseInt(scan.nextLine());
-    this.m = Integer.parseInt(scan.nextLine());
-    this.s = scan.nextLine();
-    this.t = scan.nextLine();
-    this.dp = new int[this.n + 1][this.m + 1];
-    for (int[] row : this.dp) {
-      Arrays.fill(row, 0);
-    }
+    n = Integer.parseInt(scan.nextLine());
+    m = Integer.parseInt(scan.nextLine());
+    dp = new int[n + 1][m + 1];
+    for (int i = 0; i <= n; i++) 
+      dp[i][0] = 0;
+    for (int i = 0; i <= m; i++) 
+      dp[0][i] = 0;
+    s = scan.nextLine();
+    t = scan.nextLine();
   }
 
   private void solve() {
-    for (int i = 0; i < this.n; i++) {
-      for (int j = 0; j < this.m; j++) {
-	if (this.s.charAt(i) == this.t.charAt(j)) {
-	  this.dp[i + 1][j + 1] = this.dp[i][j] + 1;
-	} else {
-	  this.dp[i + 1][j + 1] = Math.max(this.dp[i + 1][j], this.dp[i][j + 1]);
-	}
+    for (int i = 1; i <= n; i++) {
+      for (int j = 1; j <= m; j++) {
+	if (s.charAt(i - 1) == t.charAt(j - 1))
+	  dp[i][j] = Math.max(dp[i - 1][j - 1] + 1, Math.max(dp[i][j - 1], dp[i - 1][j]));
+	else
+	  dp[i][j] = Math.max(dp[i][j - 1], dp[i - 1][j]);
       }
     }
-    System.out.println(this.dp[this.n][this.m]);
+    System.out.println(dp[n][m]);
   }
 
   private static int getLowerBound(int[] target, int key) {
@@ -171,6 +173,10 @@ public class LongestCommonSubsequence {
       if (c == '\r') this.read();
       if (this.ptr > 0) this.buffer[this.ptr - 1] = ' ';
       return sb.toString();
+    }
+
+    public FastScanner scanLine() {
+      return new FastScanner(new ByteArrayInputStream(this.nextLine().getBytes(StandardCharsets.UTF_8)));
     }
 
     public int nextInt() {
