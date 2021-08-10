@@ -1,5 +1,7 @@
-/* $File: PartitionNumber.java, $Timestamp: Wed Mar 24 16:54:18 2021 */
+/* $File: PartitionNumber, $Timestamp: Tue Aug 10 11:49:02 2021 */
 import java.io.*;
+import java.nio.*;
+import java.nio.charset.*;
 import java.util.*;
 import java.text.*;
 import java.math.*;
@@ -31,22 +33,56 @@ public class PartitionNumber {
   }
 
   public PartitionNumber(FastScanner scan) {
-    this.n = Integer.parseInt(scan.nextLine());
-    this.m = Integer.parseInt(scan.nextLine());
-    this.M = Integer.parseInt(scan.nextLine());
-    this.dp = new int[this.n + 1][this.m + 1];
-    for (int i = 0; i <= this.n; i++) this.dp[i][0] = 0;
-    for (int i = 0; i <= this.m; i++) this.dp[0][i] = 1;
+    n = Integer.parseInt(scan.nextLine());
+    m = Integer.parseInt(scan.nextLine());
+    M = Integer.parseInt(scan.nextLine());
+    dp = new int[n + 1][m + 1];
+    for (int i = 0; i <= m; i++)
+      dp[0][i] = 1;
+    for (int i = 0; i <= n; i++)
+      dp[i][0] = 0;
   }
 
   private void solve() {
-    for (int i = 1; i <= this.n; i++) {
-      for (int j = 1; j <= this.m; j++) {
-	if (i >= j) this.dp[i][j] = this.dp[i - j][j] + this.dp[i][j - 1];
-	else this.dp[i][j] = this.dp[i][j - i];
+    for (int i = 1; i <= n; i++) {
+      for (int j = 1; j <= m; j++) {
+	if (i >= j) dp[i][j] = dp[i - j][j] + dp[i][j - 1];
+	else dp[i][j] = dp[i][j - 1];
       }
     }
-    System.out.println(this.dp[this.n][this.m]);
+    System.out.println(dp[n][m]);
+  }
+
+  private static int getLowerBound(int[] target, int key) {
+    int l = 0;
+    int r = target.length - 1;
+    int m = (l + r) / 2;
+    while (true) {
+      if (target[m] == key || target[m] > key) {
+        r = m - 1;
+        if (r < l) return m;
+      } else {
+        l = m + 1;
+        if (r < l) return m < target.length - 1 ? m + 1 : -1;
+      }
+      m = (l + r) / 2;
+    }
+  }
+
+  private static int getUpperBound(int[] target, int key) {
+    int l = 0;
+    int r = target.length - 1;
+    int m = (l + r) / 2;
+    while (true) {
+      if (target[m] == key || target[m] < key) {
+        l = m + 1;
+        if (r < l) return m < target.length - 1 ? m + 1 : -1;
+      } else {
+        r = m - 1;
+        if (r < l) return m;
+      }
+      m = (l + r) / 2;
+    }
   }
 
   private static class FastScanner implements Closeable {
@@ -132,6 +168,10 @@ public class PartitionNumber {
       if (c == '\r') this.read();
       if (this.ptr > 0) this.buffer[this.ptr - 1] = ' ';
       return sb.toString();
+    }
+
+    public FastScanner scanLine() {
+      return new FastScanner(new ByteArrayInputStream(this.nextLine().getBytes(StandardCharsets.UTF_8)));
     }
 
     public int nextInt() {
