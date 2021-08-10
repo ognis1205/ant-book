@@ -1,4 +1,4 @@
-/* $File: BinaryTree, $Timestamp: Tue Aug 10 13:45:54 2021 */
+/* $File: DisjointSet, $Timestamp: Tue Aug 10 15:43:48 2021 */
 import java.io.*;
 import java.nio.*;
 import java.nio.charset.*;
@@ -9,124 +9,80 @@ import java.util.function.*;
 import java.util.regex.*;
 import java.util.stream.*;
 
-public class BinaryTree {
-  private static class Tree<T extends Comparable<? super T>> {
-    private static class Node<T> {
-      T value;
-      Node<T> lhs;
-      Node<T> rhs;
-      public Node(T value) {
-	this.value = value;
-	this.lhs = null;
-	this.rhs = null;
+public class DisjointSet {
+  private static class UnionFind<T> {
+    private Map<T, T> parent;
+
+    private Map<T, Integer> rank;
+
+    public UnionFind(Collection<T> entries) {
+      parent = new HashMap<>();
+      rank   = new HashMap<>();
+      for (T entry : entries) {
+	parent.put(entry, entry);
+	rank.put(entry, 0);
       }
     }
 
-    private Node<T> root;
-
-    public Tree() {
-      this.root = null;
-    }
-
-    public void insert(T value) {
-      this.root = this.insert(this.root, value);
-    }
-
-    public boolean contains(T value) {
-      return this.contains(this.root, value);
-    }
-
-    public T delete(T value) {
-      try {
-	this.delete(this.root, value);
-	return value;
-      } catch (Exception e) {
-	return null;
-      }
-    }
-
-    private Node<T> insert(Node<T> curr, T value) {
-      if (curr == null) return new Node<>(value);
-      if (curr.value.compareTo(value) <= 0)
-	curr.rhs = insert(curr.rhs, value);
-      else
-	curr.lhs = insert(curr.lhs, value);
-      return curr;
-    }
-
-    private boolean contains(Node<T> curr, T value) {
-      if (curr == null) return false;
-      if (curr.value.compareTo(value) == 0)
-	return true;
-      else if (curr.value.compareTo(value) < 0)
-	return contains(curr.rhs, value);
-      else
-	return contains(curr.lhs, value);
-    }
-
-    private Node<T> delete(Node<T> curr, T value) throws Exception {
-      if (curr == null) throw new Exception();
-      if (curr.value.compareTo(value) == 0) {
-	if (curr.lhs == null && curr.rhs == null) return null;
-	else if (curr.lhs == null) return curr.rhs;
-	else if (curr.rhs == null) return curr.lhs;
-	T min = minOf(curr.rhs);
-	curr.value = min;
-	curr.rhs = delete(curr.rhs, min);
-	return curr;
-      } else if (curr.value.compareTo(value) <= 0) {
-        curr.rhs = delete(curr.rhs, value);
-	return curr;
+    public T find(T entry) {
+      T p = parent.get(entry);
+      if (entry.equals(p)) {
+	return entry;
       } else {
-	curr.lhs = delete(curr.lhs, value);
-	return curr;
+	p = find(p);
+	parent.put(entry, p);
+	return p;
       }
     }
 
-    private T minOf(Node<T> node) {
-      if (node.lhs == null) return node.value;
-      else return minOf(node.lhs);
+    public boolean isMember(T lhs, T rhs) {
+      return find(lhs).equals(find(rhs));
+    }
+
+    public void union(T lhs, T rhs) {
+      T lRoot = find(lhs);
+      T rRoot = find(rhs);
+      if (lRoot == rRoot) return;
+      if (rank.get(lRoot) > rank.get(rRoot)) {
+	parent.put(rRoot, lRoot);
+      } else if (rank.get(lRoot) < rank.get(rRoot)) {
+	parent.put(lRoot, rRoot);
+      } else {
+	parent.put(lRoot, rRoot);
+	rank.put(lRoot, rank.get(lRoot) + 1);
+      }
     }
   }
 
   private static FastScanner scan;
 
-  private static BinaryTree solver;
+  private static DisjointSet solver;
 
-  private Tree<Integer> tree;
+  private UnionFind<Integer> uf;
 
   public static void main(String[] args) {
     try {
       scan   = new FastScanner(new FileInputStream(new File(args[0])));
-      solver = new BinaryTree(scan);
+      solver = new DisjointSet(scan);
       solver.solve();
     } catch (Exception e) {
       e.printStackTrace();
     }
   }
 
-  public BinaryTree(FastScanner scan) {
-    tree = new Tree<>();
+  public DisjointSet(FastScanner scan) {
+    List<Integer> entries = new ArrayList<>();
+    for (int i = 0; i < 10; i++)
+      entries.add(i);
+    uf = new UnionFind<>(entries);
   }
 
   private void solve() {
-    tree.insert(0);
-    tree.insert(1);
-    tree.insert(2);
-    tree.insert(2);
-    tree.insert(3);
-    tree.insert(3);
-    tree.insert(3);
-    System.out.println(tree.contains(0));
-    System.out.println(tree.contains(-1));
-    System.out.println(tree.contains(3));
-    System.out.println(tree.delete(3));
-    System.out.println(tree.contains(3));
-    System.out.println(tree.delete(3));
-    System.out.println(tree.contains(3));
-    System.out.println(tree.delete(3));
-    System.out.println(tree.contains(3));
-    System.out.println(tree.delete(3));
+    System.out.println(uf.isMember(0, 1));
+    uf.union(0, 1);
+    System.out.println(uf.isMember(0, 1));
+    System.out.println(uf.find(0));
+    System.out.println(uf.find(1));
   }
 
   private static int getLowerBound(int[] target, int key) {
