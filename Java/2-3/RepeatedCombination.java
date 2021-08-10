@@ -1,5 +1,7 @@
-/* $File: RepeatedCombination.java, $Timestamp: Fri Mar 26 13:32:59 2021 */
+/* $File: RepeatedCombination, $Timestamp: Tue Aug 10 12:06:13 2021 */
 import java.io.*;
+import java.nio.*;
+import java.nio.charset.*;
 import java.util.*;
 import java.text.*;
 import java.math.*;
@@ -33,23 +35,59 @@ public class RepeatedCombination {
   }
 
   public RepeatedCombination(FastScanner scan) {
-    this.n = Integer.parseInt(scan.nextLine());
-    this.m = Integer.parseInt(scan.nextLine());
-    this.a = Arrays.stream(scan.nextLine().split("\\s+")).mapToInt(e -> Integer.parseInt(e)).toArray();
-    this.M = Integer.parseInt(scan.nextLine());
-    this.dp = new int[this.n + 1][this.m + 1];
-    for (int i = 0; i <= this.m; i++) this.dp[0][i] = 0;
-    for (int i = 0; i <= this.n; i++) this.dp[i][0] = 1;
+    n = Integer.parseInt(scan.nextLine());
+    m = Integer.parseInt(scan.nextLine());
+    a = new int[n + 1];
+    a[0] = 0;
+    FastScanner entries = scan.scanLine();
+    for (int i = 1; i <= n; i++)
+      a[i] = entries.nextInt();
+    M = Integer.parseInt(scan.nextLine());
+    dp = new int[n + 1][m + 1];
+    for (int i = 0; i <= n; i++)
+      dp[i][0] = 1;
   }
 
   private void solve() {
-    for (int i = 0; i < this.n; i++) {
-      for (int j = 1; j <= this.m; j++) {
-	if (j >= this.a[i] + 1) this.dp[i + 1][j] = this.dp[i + 1][j - 1] + this.dp[i][j] - this.dp[i][j - 1 - this.a[i]];
-	else this.dp[i + 1][j] = this.dp[i + 1][j - 1] + this.dp[i][j];
+    for (int i = 1; i <= n; i++) {
+      for (int j = 1; j <= m; j++) {
+	if (a[i] + 1 <= j) dp[i][j] = dp[i - 1][j] + dp[i][j - 1] - dp[i - 1][j - a[i] - 1];
+	else dp[i][j] = dp[i - 1][j] + dp[i][j - 1];
       }
     }
-    System.out.println(this.dp[this.n][this.m]);
+    System.out.println(dp[n][m]);
+  }
+
+  private static int getLowerBound(int[] target, int key) {
+    int l = 0;
+    int r = target.length - 1;
+    int m = (l + r) / 2;
+    while (true) {
+      if (target[m] == key || target[m] > key) {
+        r = m - 1;
+        if (r < l) return m;
+      } else {
+        l = m + 1;
+        if (r < l) return m < target.length - 1 ? m + 1 : -1;
+      }
+      m = (l + r) / 2;
+    }
+  }
+
+  private static int getUpperBound(int[] target, int key) {
+    int l = 0;
+    int r = target.length - 1;
+    int m = (l + r) / 2;
+    while (true) {
+      if (target[m] == key || target[m] < key) {
+        l = m + 1;
+        if (r < l) return m < target.length - 1 ? m + 1 : -1;
+      } else {
+        r = m - 1;
+        if (r < l) return m;
+      }
+      m = (l + r) / 2;
+    }
   }
 
   private static class FastScanner implements Closeable {
@@ -135,6 +173,10 @@ public class RepeatedCombination {
       if (c == '\r') this.read();
       if (this.ptr > 0) this.buffer[this.ptr - 1] = ' ';
       return sb.toString();
+    }
+
+    public FastScanner scanLine() {
+      return new FastScanner(new ByteArrayInputStream(this.nextLine().getBytes(StandardCharsets.UTF_8)));
     }
 
     public int nextInt() {
