@@ -1,5 +1,7 @@
-/* $File: LongestIncreasingSubsequence.java, $Timestamp: Mon Mar 15 13:31:46 2021 */
+/* $File: LongestIncreasingSubsequence, $Timestamp: Tue Aug 10 11:26:01 2021 */
 import java.io.*;
+import java.nio.*;
+import java.nio.charset.*;
 import java.util.*;
 import java.text.*;
 import java.math.*;
@@ -11,6 +13,8 @@ public class LongestIncreasingSubsequence {
   private static FastScanner scan;
 
   private static LongestIncreasingSubsequence solver;
+
+  private static int MAX_VALUE = 1_000_001;
 
   private int n;
 
@@ -30,45 +34,42 @@ public class LongestIncreasingSubsequence {
 
   public LongestIncreasingSubsequence(FastScanner scan) {
     n = Integer.parseInt(scan.nextLine());
-    a = Arrays.stream(scan.nextLine().split("\\s+")).mapToInt(e -> Integer.parseInt(e)).toArray();
+    FastScanner entries = scan.scanLine();
+    a  = new int[n + 1];
     dp = new int[n + 1];
-    for (int i = 0; i <= n; i++) dp[i] = Integer.MAX_VALUE;
+    a[0] = dp[0] = -1;
+    for (int i = 1; i <= n; i++) {
+      a[i]  = entries.nextInt();
+      dp[i] = MAX_VALUE;
+    }
   }
 
   private void solve() {
-    for (int i = 0; i < n; i++) dp[getLowerBound(dp, a[i])] = a[i];
-    System.out.println(getLowerBound(dp, Integer.MAX_VALUE));
+    for (int i = 1; i <= n; i++) {
+      int j = getLowerBound(dp, a[i]);
+      if (j >= 0) dp[j] = a[i];
+    }
+    int res = 0;
+    for (int i = 1; i <= n; i++) {
+      if (dp[i] < MAX_VALUE) res = i;
+    }
+    System.out.println(res);
   }
 
   private static int getLowerBound(int[] target, int key) {
-    int index = -1;
     int l = 0;
     int r = target.length - 1;
-    while (l <= r) {
-        int m = (l + r) / 2;
-        if (target[m] < key) {
-            l = m + 1;
-        } else if (target[m] > key) {
-            r = m - 1;
-        } else if (target[m] == key) {
-            index = m;
-            break;
-        }
+    int m = (l + r) / 2;
+    while (true) {
+      if (target[m] == key || target[m] > key) {
+        r = m - 1;
+        if (r < l) return m;
+      } else {
+        l = m + 1;
+        if (r < l) return m < target.length - 1 ? m + 1 : -1;
+      }
+      m = (l + r) / 2;
     }
-    return index;
-//    int l = 0;
-//    int r = target.length - 1;
-//    int m = (l + r) / 2;
-//    while (true) {
-//      if (target[m] == key || target[m] > key) {
-//        r = m - 1;
-//        if (r < l) return m;
-//      } else {
-//        l = m + 1;
-//        if (r < l) return m < target.length - 1 ? m + 1 : -1;
-//      }
-//      m = (l + r) / 2;
-//    }
   }
 
   private static int getUpperBound(int[] target, int key) {
@@ -170,6 +171,10 @@ public class LongestIncreasingSubsequence {
       if (c == '\r') this.read();
       if (this.ptr > 0) this.buffer[this.ptr - 1] = ' ';
       return sb.toString();
+    }
+
+    public FastScanner scanLine() {
+      return new FastScanner(new ByteArrayInputStream(this.nextLine().getBytes(StandardCharsets.UTF_8)));
     }
 
     public int nextInt() {
