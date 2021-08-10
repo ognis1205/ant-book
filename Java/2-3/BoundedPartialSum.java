@@ -1,5 +1,7 @@
-/* $File: BoundedPartialSum.java, $Timestamp: Mon Mar 15 06:02:31 2021 */
+/* $File: BoundedPartialSum, $Timestamp: Tue Aug 10 04:55:35 2021 */
 import java.io.*;
+import java.nio.*;
+import java.nio.charset.*;
 import java.util.*;
 import java.text.*;
 import java.math.*;
@@ -34,30 +36,68 @@ public class BoundedPartialSum {
 
   public BoundedPartialSum(FastScanner scan) {
     n = Integer.parseInt(scan.nextLine());
-    a = Arrays.stream(scan.nextLine().split("\\s+")).mapToInt(e -> Integer.parseInt(e)).toArray();
-    m = Arrays.stream(scan.nextLine().split("\\s+")).mapToInt(e -> Integer.parseInt(e)).toArray();
+    a = new int[n + 1];
+    m = new int[n + 1];
+    String[] as = scan.nextLine().split("\\s+");
+    String[] ms = scan.nextLine().split("\\s+");
+    for (int i = 1; i <= n; i++) {
+      a[i] = Integer.parseInt(as[i - 1]);
+      m[i] = Integer.parseInt(ms[i - 1]);
+    }
     K = Integer.parseInt(scan.nextLine());
     dp = new int[n + 1][K + 1];
-    for (int i = 0; i <= K; i++) dp[0][i] = -1;
-    for (int i = 0; i <  n; i++) dp[i + 1][0] = m[i];
-    dp[0][0] = 0;
+    for (int i = 0; i <= K; i++)
+      dp[0][i] = -1;
+    for (int i = 1; i <= n; i++)
+      dp[i][0] = m[i];
   }
 
   private void solve() {
-    for (int i = 0; i < n; i++) {
-      for (int j = 0; j < K; j++) {
-	if (dp[i][j + 1] >= 0) {
-	  dp[i + 1][j + 1] = m[i];
+    for (int i = 1; i <= n; i++) {
+      for (int j = 1; j <= K; j++) {
+	if (dp[i - 1][j] >= 0) {
+	  dp[i][j] = m[i];
+	} else if (j < a[i] || dp[i][j - a[i]] < 0) {
+	  dp[i][j] = -1;
 	} else {
-	  if (j + 1 >= a[i]) {
-	    dp[i + 1][j + 1] = dp[i + 1][j + 1 - a[i]] - 1;
-	  } else {
-	    dp[i + 1][j + 1] = -1;
-	  }
+	  dp[i][j] = dp[i][j - a[i]] - 1;
 	}
       }
     }
-    System.out.println(dp[n][K]);
+    if (dp[n][K] >= 0) System.out.println("yes");
+    else System.out.println("no");
+  }
+
+  private static int getLowerBound(int[] target, int key) {
+    int l = 0;
+    int r = target.length - 1;
+    int m = (l + r) / 2;
+    while (true) {
+      if (target[m] == key || target[m] > key) {
+        r = m - 1;
+        if (r < l) return m;
+      } else {
+        l = m + 1;
+        if (r < l) return m < target.length - 1 ? m + 1 : -1;
+      }
+      m = (l + r) / 2;
+    }
+  }
+
+  private static int getUpperBound(int[] target, int key) {
+    int l = 0;
+    int r = target.length - 1;
+    int m = (l + r) / 2;
+    while (true) {
+      if (target[m] == key || target[m] < key) {
+        l = m + 1;
+        if (r < l) return m < target.length - 1 ? m + 1 : -1;
+      } else {
+        r = m - 1;
+        if (r < l) return m;
+      }
+      m = (l + r) / 2;
+    }
   }
 
   private static class FastScanner implements Closeable {
@@ -143,6 +183,10 @@ public class BoundedPartialSum {
       if (c == '\r') this.read();
       if (this.ptr > 0) this.buffer[this.ptr - 1] = ' ';
       return sb.toString();
+    }
+
+    public FastScanner scanLine() {
+      return new FastScanner(new ByteArrayInputStream(this.nextLine().getBytes(StandardCharsets.UTF_8)));
     }
 
     public int nextInt() {
