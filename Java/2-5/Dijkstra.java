@@ -1,4 +1,4 @@
-/* $File: BellmanFord, $Timestamp: Wed Aug 11 03:25:08 2021 */
+/* $File: Dijkstra, $Timestamp: Wed Aug 11 06:28:49 2021 */
 import java.io.*;
 import java.nio.*;
 import java.nio.charset.*;
@@ -9,73 +9,88 @@ import java.util.function.*;
 import java.util.regex.*;
 import java.util.stream.*;
 
-public class BellmanFord {
-  private static class Edge<T> {
-    public final Integer from;
-    public final Integer to;
-    public T data;
-    public Edge(Integer from, Integer to, T data) {
-      this.from = from;
-      this.to   = to;
-      this.data = data;
+public class Dijkstra {
+  private static class Edge {
+    public final Integer u;
+    public final Integer v;
+    public final Integer w;
+    public Edge(Integer u, Integer v, Integer w) {
+      this.u = u;
+      this.v = v;
+      this.w = w;
     }
   }
 
   private static FastScanner scan;
 
-  private static BellmanFord solver;
+  private static Dijkstra solver;
 
-  private static int MAX_COST = 1_000_000;
+  private static Integer MAX = 1_000_000;
 
   private int N;
-  
+
   private int M;
 
-  private List<Edge<Integer>> E;
+  private Map<Integer, List<Edge>> E;
 
   private Integer[] V;
+
+  private PriorityQueue<Edge> que;
 
   public static void main(String[] args) {
     try {
       scan   = new FastScanner(new FileInputStream(new File(args[0])));
-      solver = new BellmanFord(scan);
+      solver = new Dijkstra(scan);
       solver.solve();
     } catch (Exception e) {
       e.printStackTrace();
     }
   }
 
-  public BellmanFord(FastScanner scan) {
+  public Dijkstra(FastScanner scan) {
     N = Integer.parseInt(scan.nextLine());
     M = Integer.parseInt(scan.nextLine());
-    E = new ArrayList<>();
+
     V = new Integer[N];
+    E = new HashMap<>();
     for (int i = 0; i < N; i++) {
-      V[i] = MAX_COST;
+      V[i] = MAX;
+      E.putIfAbsent(i, new ArrayList<Edge>());
     }
+
     for (int i = 0; i < M; i++) {
       String[] entry = scan.nextLine().split("\\s+");
-      E.add(new Edge<>(Integer.valueOf(entry[0]), Integer.valueOf(entry[1]), Integer.valueOf(entry[2])));
+      Integer u = Integer.valueOf(entry[0]);
+      Integer v = Integer.valueOf(entry[1]);
+      Integer w = Integer.valueOf(entry[2]);
+      E.get(u).add(new Edge(u, v, w));
     }
+
+    que = new PriorityQueue<>(new Comparator<Edge>() {
+	@Override
+	public int compare(Edge lhs, Edge rhs) {
+	  return lhs.u.compareTo(rhs.u);
+	}
+      });
   }
 
   private void solve() {
-    shortestPath(0);
+    bfs();
     for (Integer v : V)
       System.out.println(v);
   }
 
-  private void shortestPath(Integer from) {
-    V[from] = 0;
-    for (int i = 0; i < N - 1; i++) {
-      for (Edge<Integer> e: E) {
-	if (!V[e.from].equals(MAX_COST) && V[e.to].compareTo(V[e.from] + e.data) > 0)
-	  V[e.to] = V[e.from] + e.data;
+  private void bfs() {
+    V[0] = 0;
+    for (Edge e : E.get(0))
+      que.add(new Edge(0, e.v, e.w));
+    while (!que.isEmpty()) {
+      Edge curr = que.remove();
+      if (V[curr.v] > curr.u + curr.w) {
+	V[curr.v] = curr.u + curr.w;
+	for (Edge e : E.get(curr.v))
+	  que.add(new Edge(V[curr.v], e.v, e.w));
       }
-    }
-    for (Edge<Integer> e: E) {
-      if (V[e.to] > V[e.from] + e.data)
-	System.out.println("contains a negative weight cycle.");
     }
   }
 
