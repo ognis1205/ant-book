@@ -44,14 +44,14 @@ public class Conscription {
     for (int i = 0; i < R; i++) {
       String[] entry = scan.nextLine().split("\\s+");
       relation.add(new Relation(Integer.parseInt(entry[0]), 
-				Integer.parseInt(entry[1]) + M, 
-				-1 * Integer.parseInt(entry[2])));
+                                Integer.parseInt(entry[1]) + M, 
+                                -1 * Integer.parseInt(entry[2])));
     }
     Collections.sort(relation, new Comparator<Relation>() {
-	@Override
-	public int compare(Relation lhs, Relation rhs) {
-	  return lhs.cost - rhs.cost;
-	}
+        @Override
+        public int compare(Relation lhs, Relation rhs) {
+          return lhs.cost - rhs.cost;
+        }
       });
   }
 
@@ -64,8 +64,8 @@ public class Conscription {
     for (int i = 0; i < R; i++) {
       Relation r = relation.get(i);
       if (!uf.isJoint(r.lhs, r.rhs)) {
-	res += r.cost;
-	uf.union(r.lhs, r.rhs);
+        res += r.cost;
+        uf.union(r.lhs, r.rhs);
       }
     }
     return res;
@@ -91,19 +91,19 @@ public class Conscription {
       parent = new int[size];
       rank   = new int[size];
       for (int i = 0; i < size; i++) {
-	parent[i] = i;
-	rank[i]   = 0;
+        parent[i] = i;
+        rank[i]   = 0;
       }
     }
 
     int find(int x) {
       int p = parent[x];
       if (p == x) {
-	return x;
+        return x;
       } else {
-	p = find(p);
-	parent[x] = p;
-	return p;
+        p = find(p);
+        parent[x] = p;
+        return p;
       }
     }
 
@@ -115,14 +115,14 @@ public class Conscription {
       int l = find(lhs);
       int r = find(rhs);
       if (l == r) {
-	return;
+        return;
       } else if (rank[l] < rank[r]) {
-	parent[l] = r;
+        parent[l] = r;
       } else if (rank[l] > rank[r]) {
-	parent[r] = l;
+        parent[r] = l;
       } else {
-	parent[l] = r;
-	rank[l]++;
+        parent[l] = r;
+        rank[l]++;
       }
     }
   }
