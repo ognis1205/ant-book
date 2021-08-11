@@ -40,10 +40,10 @@ public class Roadblocks {
     R = Integer.parseInt(scan.nextLine());
     G = new Graph(N);
     que = new PriorityQueue<>(new Comparator<>() {
-	@Override
-	public int compare(Propagate lhs, Propagate rhs) {
-	  return lhs.aux - rhs.aux;
-	}
+        @Override
+        public int compare(Propagate lhs, Propagate rhs) {
+          return lhs.aux - rhs.aux;
+        }
       });
     for (int i = 0; i < R; i++) {
       String[] entry = scan.nextLine().split("\\s+");
@@ -67,14 +67,14 @@ public class Roadblocks {
       List<Edge> es = G.E.get(p.to);
       int d = p.aux;
       if (G.V1[p.to] > d) {
-	int t = G.V1[p.to];
-	G.V1[p.to] = d;
-	d = t;
-	for (Edge e: es) que.add(new Propagate(e.to, G.V1[e.from] + e.cost));
+        int t = G.V1[p.to];
+        G.V1[p.to] = d;
+        d = t;
+        for (Edge e: es) que.add(new Propagate(e.to, G.V1[e.from] + e.cost));
       }
       if (G.V2[p.to] > d && G.V1[p.to] < d) {
-	G.V2[p.to] = d;
-	for (Edge e: es) que.add(new Propagate(e.to, G.V2[e.from] + e.cost));
+        G.V2[p.to] = d;
+        for (Edge e: es) que.add(new Propagate(e.to, G.V2[e.from] + e.cost));
       }
     }
   }
@@ -111,9 +111,9 @@ public class Roadblocks {
       V2 = new int[size];
       E  = new HashMap<>();
       for (int i = 0; i < size; i++) {
-	V1[i] = MAX_VALUE;
-	V2[i] = MAX_VALUE;
-	E.putIfAbsent(i, new ArrayList<>());
+        V1[i] = MAX_VALUE;
+        V2[i] = MAX_VALUE;
+        E.putIfAbsent(i, new ArrayList<>());
       }
     }
 
