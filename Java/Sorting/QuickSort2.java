@@ -15,7 +15,12 @@ class QuickSort2 {
       String[] entries = scan.nextLine().split("\\s+");
       for (String entry : entries)
 	list.add(Integer.valueOf(entry));
-      Lists.sort(list);
+      Lists.sort(list, new Comparator<Integer>() {
+	  @Override
+	  public int compare(Integer lhs, Integer rhs) {
+	    return lhs.compareTo(rhs);
+	  }
+	});
       list.stream().forEach(i -> System.out.println(i));
     } catch (Exception e) {
       e.printStackTrace();
@@ -23,8 +28,20 @@ class QuickSort2 {
   }
 
   private static class Lists {
+    public static <T> void sort(List<T> list, Comparator<T> comparator) {
+      Lists.sort(list, 0, list.size() - 1, comparator);
+    }
+
     public static <T extends Comparable<? super T>> void sort(List<T> list) {
       Lists.sort(list, 0, list.size() - 1);
+    }
+
+    private static <T> void sort(List<T> list, int lo, int hi, Comparator<T> comparator) {
+      if (lo < hi) {
+	int p = partition(list, lo, hi, comparator);
+	sort(list, lo, p - 1, comparator);
+	sort(list, p + 1, hi, comparator);
+      }
     }
 
     private static <T extends Comparable<? super T>> void sort(List<T> list, int lo, int hi) {
@@ -33,6 +50,16 @@ class QuickSort2 {
 	sort(list, lo, p - 1);
 	sort(list, p + 1, hi);
       }
+    }
+
+    private static <T> int partition(List<T> list, int lo, int hi, Comparator<T> comparator) {
+      T p = list.get(hi);
+      int i = lo;
+      for (int j = lo; j <= hi; j++)
+	if (comparator.compare(list.get(j), p) < 0)
+	  swap(list, i++, j);
+      swap(list, i, hi);
+      return i;
     }
 
     private static <T extends Comparable<? super T>> int partition(List<T> list, int lo, int hi) {
