@@ -10,17 +10,17 @@ class QuickSort2 {
   public static void main(String[] args) {
     try {
       scan = new Scanner(new FileInputStream(new File(args[0])));
+
       int n = Integer.parseInt(scan.nextLine());
       list = new ArrayList<>();
       String[] entries = scan.nextLine().split("\\s+");
       for (String entry : entries)
 	list.add(Integer.valueOf(entry));
-      Lists.sort(list, new Comparator<Integer>() {
-	  @Override
-	  public int compare(Integer lhs, Integer rhs) {
-	    return lhs.compareTo(rhs);
-	  }
+
+      Lists.sort(list, (lhs, rhs) -> {
+	  return Integer.compare(lhs, rhs);
 	});
+
       list.stream().forEach(i -> System.out.println(i));
     } catch (Exception e) {
       e.printStackTrace();
