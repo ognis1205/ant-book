@@ -40,6 +40,7 @@ public class ReadingProblem {
   ReadingProblem(Scanner scan) {
     P = Integer.parseInt(scan.nextLine());
     a = new int[P];
+   
     contents = new HashSet<>();
     sofar = new HashSet<>();
     que = new ArrayDeque<>();
