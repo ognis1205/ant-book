@@ -60,14 +60,18 @@ def bubble_sort():
     """
     with Input(INPUT) as input_file:
         x = input_file.readline(int, is_array=True)
-        swapped = True
-        while swapped:
-            swapped = False
-            for i, j in zip(range(len(x))[:], range(len(x))[1:]):
-                if x[i] > x[j]:
-                    x[i], x[j] = x[j], x[i]
-                    swapped = True
+        loop(x)
         print(x)
+
+
+def loop(arr):
+    is_swapped = True
+    while is_swapped:
+        is_swapped = False
+        for i, j in zip(range(len(arr))[:], range(len(arr))[1:]):
+            if arr[i] > arr[j]:
+                arr[i], arr[j] = arr[j], arr[i]
+                is_swapped = True
 
 
 if __name__ == "__main__":

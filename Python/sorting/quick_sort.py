@@ -59,24 +59,24 @@ def quick_sort():
     """
     with Input(INPUT) as input_file:
         x = input_file.readline(int, is_array=True)
-        sort(x, 0, len(x) - 1)
+        loop(x, 0, len(x) - 1)
         print(x)
 
 
-def sort(x, l, r):
+def loop(arr, l, r):
     if l < r:
-        p = partition(x, l, r)
-        sort(x, l, p - 1)
-        sort(x, p + 1, r)
+        p = pivot(arr, l, r)
+        loop(arr, l, p - 1)
+        loop(arr, p + 1, r)
 
 
-def partition(x, l, r):
-    i, p = l, x[r]
+def pivot(arr, l, r):
+    i, p = l, arr[r]
     for j in range(l, r + 1):
-        if x[j] < p:
-            x[i], x[j] = x[j], x[i]
+        if arr[j] < p:
+            arr[i], arr[j] = arr[j], arr[i]
             i += 1
-    x[i], x[r] = x[r], x[i]
+    arr[i], arr[r] = arr[r], arr[i]
     return i
 
 
