@@ -50,6 +50,13 @@ INPUT = dedent("""\
 
 
 def quick_sort():
+    """Quick sorting.
+
+    Quick sort is an divide-and-conquer algorithm. It works by selecting a pivot element
+    from a given list and partitioning the other element into two sub list, according
+    to whether they are less or greater then the pivot. The sub arrays are then recursively
+    sorted.
+    """
     with Input(INPUT) as input_file:
         x = input_file.readline(int, is_array=True)
         sort(x, 0, len(x) - 1)
