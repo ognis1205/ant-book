@@ -59,9 +59,9 @@ def bubble_sort():
     Average space complexity: O(1), in-place
     """
     with Input(INPUT) as input_file:
-        x = input_file.readline(int, is_array=True)
-        loop(x)
-        print(x)
+        xs = input_file.readline(int, is_array=True)
+        loop(xs)
+        print(xs)
 
 
 def loop(arr):

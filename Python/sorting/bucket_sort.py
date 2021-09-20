@@ -1,4 +1,4 @@
-"""$File: quick_sort, $Timestamp: Thu Sep 16 17:17:13 2021
+"""$File: bucket_sort, $Timestamp: Sat Sep 18 16:30:14 2021
 """
 
 from __future__ import absolute_import
@@ -45,43 +45,50 @@ def array(n, generate=lambda i: 0):
 
 
 INPUT = dedent("""\
-123 3 1 424 324 5 -12309 -2 2304 -234894 2 3992 22243 23 22243 239
+9.8 0.6 10.1 1.9 3.07 3.04 5.0 8.0 4.8 7.68
 """)
 
 
-def quick_sort():
-    """Quick sorting.
+def bucket_sort():
+    """Bucket sort.
 
-    Quick sort is an divide-and-conquer algorithm. It works by selecting a pivot element
-    from a given list and partitioning the other elements into two sub list, according
-    to whether they are less or greater than the pivot. The sub arrays are then recursively
-    sorted.
+    Bucket sort, is a sorting algorithm that works by distributing elements in a given list
+    into a number of buckets. Each buckets are then sorted individually, either using a bucket
+    sort or another sorting algorithm.
     """
     with Input(INPUT) as input_file:
-        xs = input_file.readline(int, is_array=True)
-        loop(xs, 0, len(xs) - 1)
+        xs = input_file.readline(float, is_array=True)
+        bs = buckets(xs)
+        xs = []
+        for b in bs:
+            for x in b:
+                xs.append(x)
         print(xs)
 
 
-def loop(arr, l, r):
-    if l < r:
-        p = pivot(arr, l, r)
-        loop(arr, l, p - 1)
-        loop(arr, p + 1, r)
+def buckets(arr, num_buckets=10):
+    lo, hi, buckets = min(arr), max(arr), []
+    width = (hi - lo) / num_buckets
+    for i in range(num_buckets):
+        buckets.append([])
+    for a in arr:
+        i = indexof(a, lo, width)
+        buckets[i].append(a)
+    for bucket in buckets:
+        bucket.sort()
+    return buckets
 
 
-def pivot(arr, l, r):
-    i, p = l, arr[r]
-    for j in range(l, r + 1):
-        if arr[j] < p:
-            arr[i], arr[j] = arr[j], arr[i]
-            i += 1
-    arr[i], arr[r] = arr[r], arr[i]
-    return i
+def indexof(x, lo, width):
+    diff = (x - lo) / width - int((x - lo) / width)
+    if (diff == 0 and x != lo):
+        return int((x - lo) / width) - 1
+    else:
+        return int((x - lo) / width)
 
 
 if __name__ == "__main__":
    try:
-      quick_sort()
+      bucket_sort()
    except:
       print(format_exc(), file=sys.stderr)
