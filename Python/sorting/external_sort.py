@@ -73,9 +73,14 @@ INPUT = dedent("""\
 
 
 def external_sort():
+    """External sort.
+
+    External sorting is a sorting algorithm efficiently works for a large data that cannot
+    fit in a main memory. It works by dividing a given list into a smaller chunks called runs
+    which can be fitted in a main memory and individually sorting
+    """
     with Input(INPUT) as input_file:
-        ms = mergers(input_file, 2, io.StringIO)
-        loop(sys.stdout, ms)
+        loop(sys.stdout, mergers(input_file, 2, io.StringIO))
 
 
 def loop(output_file, mergers):
@@ -94,18 +99,18 @@ def loop(output_file, mergers):
 
 
 def mergers(input_file, run_length, opener=open):
-    ms = []
+    ret = []
     while True:
         xs = input_file.readlines(run_length, int)
         if not len(xs):
             break;
         xs.sort()
-        m = opener()
+        merger = opener()
         for x in xs:
-            m.write("{}\n".format(x))
-        m.seek(0)
-        ms.append(m)
-    return ms
+            merger.write("{}\n".format(x))
+        merger.seek(0)
+        ret.append(merger)
+    return ret
 
 
 if __name__ == "__main__":
