@@ -1,4 +1,4 @@
-"""$File: bubble_sort, $Timestamp: Thu Sep 16 16:06:57 2021
+"""$File: external_sort, $Timestamp: Tue Sep 21 03:19:50 2021
 """
 
 from __future__ import absolute_import
@@ -60,37 +60,56 @@ def array(n, generate=lambda i: 0):
 
 
 INPUT = dedent("""\
-123 3 1 424 324 5 -12309 -2 2304 -234894 2 3992 22243 23 22243 239
+6
+7
+8
+9
+2
+5
+3
+4
+1
 """)
 
 
-def bubble_sort():
-    """Bubble sorting.
-
-    Bubble sorting is a simple algorithm that repeatedly steps through a given array,
-    compares adjacent elements and swaps them if they are in wrong order.
-
-    Average time complexity: O(n^2)
-    Average space complexity: O(1), in-place
-    """
-    with Input() as input_file:
-        xs = input_file.readline(int, is_array=True)
-        loop(xs)
-        print(xs)
+def external_sort():
+    with Input(INPUT) as input_file:
+        ms = mergers(input_file, 2, io.StringIO)
+        loop(sys.stdout, ms)
 
 
-def loop(arr):
-    is_swapped = True
-    while is_swapped:
-        is_swapped = False
-        for i, j in zip(range(len(arr))[:], range(len(arr))[1:]):
-            if arr[i] > arr[j]:
-                arr[i], arr[j] = arr[j], arr[i]
-                is_swapped = True
+def loop(output_file, mergers):
+    stack = [int(merger.readline()) for merger in mergers]
+    while stack:
+        c = min(stack)
+        output_file.write("{}\n".format(c))
+        i = stack.index(c)
+        n = mergers[i].readline()
+        if n:
+            stack[i] = int(n)
+        else:
+            del stack[i]
+            mergers[i].close()
+            del mergers[i]
+
+
+def mergers(input_file, run_length, opener=open):
+    ms = []
+    while True:
+        xs = input_file.readlines(run_length, int)
+        if not len(xs):
+            break;
+        xs.sort()
+        m = opener()
+        for x in xs:
+            m.write("{}\n".format(x))
+        m.seek(0)
+        ms.append(m)
+    return ms
 
 
 if __name__ == "__main__":
    try:
-      bubble_sort()
+      external_sort()
    except:
       print(format_exc(), file=sys.stderr)
