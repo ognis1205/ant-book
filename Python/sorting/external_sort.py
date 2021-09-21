@@ -76,8 +76,9 @@ def external_sort():
     """External sort.
 
     External sorting is a sorting algorithm efficiently works for a large data that cannot
-    fit in a main memory. It works by dividing a given list into a smaller chunks called runs
-    which can be fitted in a main memory and individually sorting
+    fit in a main memory. It works by dividing a given list into a smaller chunks of data
+    called runs, and sorting runs individually. After creating runs, they are merged so that
+    the elements preserve a desired order, by utilizing, e.g., min-heap data structure.
     """
     with Input(INPUT) as input_file:
         loop(sys.stdout, mergers(input_file, 2, io.StringIO))
