@@ -1,33 +1,18 @@
-"""$File: quick_sort, $Timestamp: Thu Sep 16 17:17:13 2021
-"""
-
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
-
-try:
-   input = raw_input
-except NameError:
-   pass
-
-import io
-import os
 import sys
-from copy import deepcopy
-from math import sqrt
-from itertools import permutations
-from itertools import combinations, combinations_with_replacement
+from abc import abstractmethod
+from io import StringIO
 from textwrap import dedent
 from traceback import format_exc
+from typing import Protocol, TypeVar, MutableSequence
 
 
-class Input(object):
+class Input:
     def __init__(self, text=None):
-        self._io = io.StringIO(text) if text else None
+        self._io = StringIO(text) if text else None
 
-    def readline(self, parser=str, is_array=False):
-        return map(parser, self._readline().split()) if is_array else parser(self._readline())
+    def readline(self, parse=str, is_array=False):
+        return map(parse, self._readline().split()) if is_array else parse(self._readline())
+        
 
     def _readline(self):
         return self._io.readline().strip() if self._io else input().strip()
@@ -40,48 +25,48 @@ class Input(object):
             self._io.close()
 
 
-def array(n, generate=lambda i: 0):
-    return [deepcopy(generate(i)) for i in range(n)]
+class Comparable(Protocol):
+    @abstractmethod
+    def __lt__():
+        pass
 
 
-INPUT = dedent("""\
-123 3 1 424 324 5 -12309 -2 2304 -234894 2 3992 22243 23 22243 239
-""")
+ComparableType = TypeVar('ComparableType', bound=Comparable)
 
 
-def quick_sort():
-    """Quick sorting.
-
-    Quick sort is an divide-and-conquer algorithm. It works by selecting a pivot element
-    from a given list and partitioning the other elements into two sub list, according
-    to whether they are less or greater than the pivot. The sub arrays are then recursively
-    sorted.
-    """
-    with Input(INPUT) as input_file:
-        xs = input_file.readline(int, is_array=True)
-        loop(xs, 0, len(xs) - 1)
-        print(xs)
-
-
-def loop(arr, l, r):
-    if l < r:
-        p = pivot(arr, l, r)
-        loop(arr, l, p - 1)
-        loop(arr, p + 1, r)
-
-
-def pivot(arr, l, r):
-    i, p = l, arr[r]
-    for j in range(l, r + 1):
-        if arr[j] < p:
-            arr[i], arr[j] = arr[j], arr[i]
+def partition(seq: MutableSequence[ComparableType], start: int, end: int) -> int:
+    assert 0 <= start < len(seq) and 0 <= end < len(seq) and start <= end
+    i = start
+    p = seq[end]
+    for j in range(start, end):
+        if seq[j] < p:
+            seq[i], seq[j] = seq[j], seq[i]
             i += 1
-    arr[i], arr[r] = arr[r], arr[i]
+    seq[i], seq[end] = seq[end], seq[i]
     return i
 
 
-if __name__ == "__main__":
-   try:
-      quick_sort()
-   except:
-      print(format_exc(), file=sys.stderr)
+def qsort(seq: MutableSequence[ComparableType], start: int, end: int) -> None:
+    if start >= end:
+        return
+    p = partition(seq, start, end)
+    qsort(seq, start, p - 1)
+    qsort(seq, p + 1, end)
+
+
+INPUT = '''\
+5 3 -10 2 10
+'''
+
+def main():
+    with Input(INPUT) as input:
+        seq = list(input.readline(parse=int, is_array=True))
+        qsort(seq, 0, 4)
+        print('result: ', seq)
+
+
+if __name__ == '__main__':
+    try:
+        main()
+    except Exception as e:
+        print(format_exc(), file=sys.stderr)
