@@ -101,6 +101,16 @@ class LinkedList(Generic[ComparableType]):
             yield curr
             curr = curr.next
 
+    def reverse(self):
+        prev = None
+        curr = self.head
+        while curr:
+            tmp = curr.next
+            curr.next = prev
+            prev = curr
+            curr = tmp
+        self.head = prev
+
     def sort(self):
         self._sort(self.head, self.tail)
 
@@ -160,6 +170,9 @@ def main():
         print(f'test: {linked_list}')
 
         linked_list.sort()
+        print(f'test: {linked_list}')
+
+        linked_list.reverse()
         print(f'test: {linked_list}')
 
 
