@@ -137,9 +137,6 @@ class LinkedList(Generic[ComparableType]):
         i.data, j.data = j.data, i.data
         return p
 
-    def _swap(self, lhs, rhs):
-        lhs.data, rhs.data = rhs.data, lhs.data
-
     def to_list(self):
         return list(map(lambda n: n.data, self.traverse()))
 
