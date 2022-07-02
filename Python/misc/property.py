@@ -36,9 +36,41 @@ class my_property:
         return type(self)(self.get_func, self.set_func, del_func, self.__doc__)
 
 
+class my_staticmethod:
+    def __init__(self, func, doc=None):
+        self.func = func
+        if not doc:
+            doc = self.func.__doc__
+        self.__doc__ = doc
+
+    def __get__(self, obj, objtype=None):
+        return self.func
+
+
+class my_classmethod:
+    def __init__(self, func, doc=None):
+        self.func = func
+        if not doc:
+            doc = func.__doc__
+        self.__doc__ = doc
+
+    def __get__(self, obj, objtype):
+        def wrap(*args, **kwargs):
+            return self.func(objtype, *args, **kwargs)
+        return wrap
+
+
 class Test:
     def __init__(self, name):
         self._name = name
+
+    @my_staticmethod
+    def add(x, y):
+        return x + y
+
+    @my_classmethod
+    def fromName(clazz, name):
+        return clazz(name)
 
     @my_property
     def name(self):
@@ -56,6 +88,12 @@ def main():
     test = Test('N/A')
     print(test.name)
     test.name = 'ognis1205'
+    print(test)
+    print(test.add(1, 2))
+    print(Test.add(1, 2))
+    test = Test.fromName('fromName')
+    print(test)
+    test = test.fromName('fromInstance')
     print(test)
 
 
