@@ -1,95 +1,16 @@
-import io
 import sys
+from abc import abstractmethod
+from dataclasses import dataclass
+from io import StringIO
+from re import split
 from textwrap import dedent
 from traceback import format_exc
+from typing import Protocol, TypeVar, Generic, Optional
 
 
-class Node(object):
-    def __init__(self, data, next=None):
-        self.data = data
-        self.next = next
-
-    def __str__(self):
-        return "Node({})".format(self.data)
-
-
-class LinkedList(object):
-    def __init__(self):
-        self.head = None
-
-    def __str__(self):
-        nodes = ""
-        curr = self.head
-        while curr:
-            nodes += str(curr) + ","
-            curr = curr.next
-        nodes = nodes.strip(",")
-        return "LinkedList([{}])".format(nodes)
-
-    def add(self, data):
-        if not self.head:
-            self.head = Node(data)
-        else:
-            curr = self.head
-            while curr.next:
-                curr = curr.next
-            curr.next = Node(data)
-
-    @property
-    def first(self):
-        return self.head
-
-    @property
-    def last(self):
-        if not self.head:
-            return self.head
-        else:
-            curr = self.head
-            while curr.next:
-                curr = curr.next
-            return curr
-
-    def swap(self, lhs, rhs):
-        tmp = lhs.data
-        lhs.data = rhs.data
-        rhs.data = tmp
-
-    def partition(self, lo, hi):
-        if (not lo or not hi or lo == hi):
-            return
-        pivot = hi.data
-        prev = None
-        curr = lo
-        while lo != hi:
-            if lo.data <= pivot:
-                self.swap(curr, lo)
-                prev = curr
-                curr = curr.next
-            lo = lo.next
-        self.swap(curr, hi)
-        return prev
-
-    def sort(self, lo, hi):
-        if (not lo or not hi or lo == hi):
-            return
-        p = self.partition(lo, hi)
-        if p:
-            self.sort(lo, p)
-            if p.next != hi:
-                self.sort(p.next.next, hi)
-        else:
-            self.sort(lo.next, hi)
-
-
-class Input(object):
+class UserInput:
     def __init__(self, text=None):
-        self._io = io.StringIO(text) if text else None
-
-    def readline(self, parse, is_array=False):
-        return list(map(parse, self._readline().split())) if is_array else parse(self._readline())
-
-    def _readline(self):
-        return self._io.readline().strip() if self._io else input().strip()
+        self._io = StringIO(text) if text else None
 
     def __enter__(self):
         return self
@@ -98,23 +19,158 @@ class Input(object):
         if self._io:
             self._io.close()
 
+    def readline(self, parse=str, is_array=False, delimiter=r'\s+'):
+        return map(parse, split(delimiter, self._readline())) if is_array else parse(self._readline())
+
+    def _readline(self):
+        return self._io.readline().strip() if self._io else input().strip()
+
+
+ComparableType = TypeVar('ComparableType', bound='Comparable')
+
+
+class Comparable(Protocol):
+    @abstractmethod
+    def __lt__(self, other):
+        pass
+
+
+NodeType = TypeVar('Node', bound='Node')
+
+
+@dataclass
+class Node(Generic[ComparableType]):
+    data: ComparableType
+    next: Optional[NodeType] = None
+
+
+class LinkedList(Generic[ComparableType]):
+    def __init__(self):
+        self.head = None
+
+    @property
+    def tail(self):
+        curr = self.head
+        while curr and curr.next:
+            curr = curr.next
+        return curr
+
+    def prepend(self, data: ComparableType):
+        node = Node(data)
+        node.next = self.head
+        self.head = node
+
+    def append(self, data: ComparableType):
+        if not self.head:
+            self.head = Node(data)
+        else:
+            self.tail.next = Node(data)
+
+    def delete(self, condition):
+        try:
+            prev, found = next(self._find(condition))
+            if prev:
+                prev.next = found.next
+            elif found:
+                self.head = found.next
+        except StopIteration:
+            return
+
+    def insert(self, after, data):
+        try:
+            _, found = next(self._find(lambda x: x == after))
+            tmp = found.next
+            node = Node(data)
+            found.next, node.next = node, tmp
+        except StopIteration:
+            pass
+
+    def find(self, condition):
+        try:
+            _, found = next(self._find(condition))
+            return found.data if found else None
+        except StopIteration:
+            return None
+
+    def reverse(self):
+        prev, curr = None, self.head
+        while curr:
+            tmp = curr.next
+            prev, curr.next = curr, prev
+            curr = tmp
+        self.head = prev
+
+    def sort(self):
+        self._sort(self.head, self.tail)
+
+    def _sort(self, start, end):
+        if not start or not end or start == end:
+            return
+        prev = self._partition(start, end)
+        if prev:
+            self._sort(start, prev)
+            if prev.next != end:
+                self._sort(prev.next.next, end)
+        else:
+            self._sort(start.next, end)
+
+    def _partition(self, start, end):
+        p = None
+        i = j = start
+        while j != end:
+            if j.data <= end.data:
+                i.data, j.data = j.data, i.data
+                p, i = i, i.next
+            j = j.next
+        i.data, j.data = j.data, i.data
+        return p
+
+    def _find(self, condition):
+        for p, n in self._traverse():
+            if condition(n.data):
+                yield p, n
+
+    def _traverse(self):
+        prev, curr = None, self.head
+        while curr:
+            yield prev, curr
+            prev, curr = curr, curr.next
+
+    def __iter__(self):
+        return map(lambda n: n[1].data, self._traverse())
+
+    def __str__(self):
+        return f'[{", ".join([str(n) for n in self])}]'
+
 
 INPUT = dedent('''\
 123 3 1 424 324 5 -12309 -2 2304 -234894 2 3992 22243 23 22243 239
 ''')
 
+
 def main():
-    with Input(text=INPUT) as input_file:
-        linked = LinkedList()
-        for d in input_file.readline(int, is_array=True):
-            linked.add(d)
-        print(linked)
-        linked.sort(linked.first, linked.last)
-        print(linked)
+    with UserInput(text=INPUT) as user_input:
+        seq = list(user_input.readline(parse=int, is_array=True))
+        linked_list = LinkedList()
+        for i in seq:
+            linked_list.append(i)
+        print(f'test: {linked_list}')
+
+        linked_list.delete(lambda x: x == 1)
+        print(f'test: {linked_list}')
+
+        linked_list.reverse()
+        print(f'test: {linked_list}')
+
+        linked_list.insert(2, 11)
+        print(f'test: {linked_list}')
+
+        linked_list.sort()
+        print(f'test: {linked_list}')
 
 
 if __name__ == '__main__':
     try:
         main()
-    except:
+    except Exception:
         print(format_exc(), file=sys.stderr)
