@@ -262,7 +262,8 @@ def interpret(raw_string):
 
 
 def main():
-    interpret('1 + (6 / 3) + -.75')
+    while line := input():
+        interpret(line)
 
 
 if __name__ == '__main__':
