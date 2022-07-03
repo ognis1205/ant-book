@@ -241,7 +241,7 @@ class Parser:
             if self.next_token.token_type != TokenType.RPR:
                 raise Exception('invalid syntax')
             self.advance()
-            return tree
+            return Number(eval(repr(tree)))
         elif token.token_type == TokenType.NUM:
             self.advance()
             return Number(token.value)
@@ -262,7 +262,7 @@ def interpret(raw_string):
 
 
 def main():
-    while line := input():
+    while line := input('enter :'):
         interpret(line)
 
 
