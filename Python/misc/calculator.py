@@ -1,6 +1,8 @@
 import sys
+from dataclasses import dataclass
 from enum import Enum
 from traceback import format_exc
+from typing import Optional
 
 
 class TokenType(Enum):
@@ -12,17 +14,71 @@ class TokenType(Enum):
     LPR = 6
     RPR = 7
 
-    def __str__(self):
-        return self.name
 
-
+@dataclass
 class Token:
-    def __init__(self, token_type, value=None):
-        self.token_type = token_type
-        self.value = value
+    token_type: TokenType
+    value: Optional[float] = None
 
-    def __str__(self):
-        return f'Token({str(self.token_type)}, {self.value})'
+
+@dataclass
+class Number:
+    value: float
+
+    def __repr__(self):
+        return f'{self.value}'
+
+
+@dataclass
+class Add:
+    lhs: any
+    rhs: any
+
+    def __repr__(self):
+        return f'{repr(self.lhs)} + {repr(self.rhs)}'
+
+
+@dataclass
+class Subtratc:
+    lhs: any
+    rhs: any
+
+    def __repr__(self):
+        return f'{repr(self.lhs)} - {repr(self.rhs)}'
+
+
+@dataclass
+class Multiply:
+    lhs: any
+    rhs: any
+
+    def __repr__(self):
+        return f'{repr(self.lhs)} * {repr(self.rhs)}'
+
+
+@dataclass
+class Divide:
+    lhs: any
+    rhs: any
+
+    def __repr__(self):
+        return f'{repr(self.lhs)} / {repr(self.rhs)}'
+
+
+@dataclass
+class Plus:
+    child: any
+
+    def __repr__(self):
+        return f'+{repr(self.child)}'
+
+
+@dataclass
+class Minus:
+    child: any
+
+    def __repr__(self):
+        return f'-{repr(self.child)}'
 
 
 class Lexer:
@@ -124,14 +180,89 @@ class Lexer:
         return Token(TokenType.NUM, float(value))
 
 
-def lex(raw_string):
+class Parser:
+    def __init__(self, tokens):
+        self._tokens = tokens
+        self.advance()
+
+    def advance(self):
+        try:
+            self.next_token = next(self._tokens)
+        except StopIteration:
+            self.next_token = None
+
+    @property
+    def has_next(self):
+        return self.next_token is not None
+
+    @property
+    def has_additive(self):
+        return self.next_token.token_type in (TokenType.ADD, TokenType.SUB)
+
+    @property
+    def has_multiplicative(self):
+        return self.next_token.token_type in (TokenType.MUL, TokenType.DIV)
+
+    def parse(self):
+        if not self.has_next:
+            return None
+        tree = self.expr()
+        if self.has_next:
+            raise Exception('invalid syntax')
+        return tree
+
+    def expr(self):
+        tree = self.term()
+        while self.has_next and self.has_additive:
+            if self.next_token.token_type == TokenType.ADD:
+                self.advance()
+                tree = Add(tree, self.term())
+            elif self.next_token.token_type == TokenType.SUB:
+                sels.advance()
+                tree = Subtract(tree, self.term())
+        return tree
+
+    def term(self):
+        tree = self.factor()
+        while self.has_next and self.has_multiplicative:
+            if self.next_token.token_type == TokenType.MUL:
+                self.advance()
+                tree = Multiply(tree, self.factor())
+            elif self.next_token.token_type == TokenType.DIV:
+                self.advance()
+                tree = Divide(tree, self.factor())
+        return tree
+
+    def factor(self):
+        token = self.next_token
+        if token.token_type == TokenType.LPR:
+            self.advance()
+            tree = self.expr()
+            if self.next_token.token_type != TokenType.RPR:
+                raise Exception('invalid syntax')
+            self.advance()
+            return tree
+        elif token.token_type == TokenType.NUM:
+            self.advance()
+            return Number(token.value)
+        elif token.token_type == TokenType.ADD:
+            self.advance()
+            return Plus(self.factor())
+        elif token.token_type == TokenType.SUB:
+            self.advance()
+            return Minus(self.factor())
+        raise Exception('invalid syntax')
+
+
+def interpret(raw_string):
     lexer = Lexer(raw_string)
-    for lexeme in lexer.tokens():
-        print(lexeme)
+    parser = Parser(lexer.tokens())
+    tree = parser.parse()
+    print(eval(repr(tree)))
 
 
 def main():
-    lex('1 + (2 / 3) + -.1234')
+    interpret('1 + (6 / 3) + -.75')
 
 
 if __name__ == '__main__':
