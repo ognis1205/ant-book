@@ -187,7 +187,7 @@ class Parser:
     def has_multiplicative(self):
         return self.next_token.token_type in (TokenType.MUL, TokenType.DIV)
 
-    def parse(self):
+    def AST(self):
         if not self.has_next:
             return None
         tree = self.expr()
@@ -241,7 +241,7 @@ class Parser:
 def interpret(raw_string):
     lexer = Lexer(raw_string)
     parser = Parser(lexer.tokens())
-    tree = parser.parse()
+    tree = parser.AST()
     print(eval(repr(tree)))
 
 
