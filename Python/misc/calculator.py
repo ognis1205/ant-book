@@ -65,22 +65,6 @@ class Divide:
         return f'{repr(self.lhs)} / {repr(self.rhs)}'
 
 
-@dataclass
-class Plus:
-    child: any
-
-    def __repr__(self):
-        return f'+{repr(self.child)}'
-
-
-@dataclass
-class Minus:
-    child: any
-
-    def __repr__(self):
-        return f'-{repr(self.child)}'
-
-
 class Lexer:
     WHITESPACES = ' \n\t'
 
@@ -247,10 +231,10 @@ class Parser:
             return Number(token.value)
         elif token.token_type == TokenType.ADD:
             self.advance()
-            return Plus(self.factor())
+            return Number(eval(repr(self.factor())))
         elif token.token_type == TokenType.SUB:
             self.advance()
-            return Minus(self.factor())
+            return Number(-1 * eval(repr(self.factor())))
         raise Exception('invalid syntax')
 
 
