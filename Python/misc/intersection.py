@@ -41,7 +41,7 @@ class Comparable(Protocol):
 NodeType = TypeVar('NodeType', bound='Node')
 
 @dataclass
-class Node(Generic[ComparableType]):
+class Node(Generic[ComparableType, NodeType]):
     data: ComparableType
     next: Optional[NodeType] = None
 
@@ -81,17 +81,17 @@ INPUT = dedent('''\
 def main():
     with UserInput(INPUT) as user_input:
         line = list(user_input.readline(is_array=True, parse=int))
-        lhs = LinkedList()
+        lhs = LinkedList[int]()
         for i in line:
             lhs.append(i)
         line = list(user_input.readline(is_array=True, parse=int))
-        rhs = LinkedList()
+        rhs = LinkedList[int]()
         for i in line:
             rhs.append(i)
         print(f'test: {lhs}')
         print(f'test: {rhs}')
 
-        ret = LinkedList()
+        ret = LinkedList[int]()
         l = lhs.head
         r = rhs.head
         while l and r:
