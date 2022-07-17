@@ -5,26 +5,27 @@ const FULFILLED = Symbol('FULFILLED');
 const REJECTED = Symbol('REJECTED');
 
 const exec = (f, onFulfilled, onRejected) => {
-  let done = false;
+  let errorIsHandled = false;
   try {
     f(
       (value) => {
-        if (done) return;
-        done = true;
         onFulfilled(value);
       },
       (error) => {
-        if (done) return;
-        done = true;
+        errorIsHandled = true;
         onRejected(error);
       }
     );
   } catch(error) {
-    if (done) return;
-    done = true;
+    if (errorIsHandled) return;
     onRejected(error);
   }
 };
+
+const Callbacks = (onFulfilled, onRejected) => ({
+  onFulfilled: onFulfilled,
+  onRejected: onRejected,
+});
 
 const maybeThen = (maybePromise) => {
   if (maybePromise instanceof MyPromise &&
@@ -35,52 +36,100 @@ const maybeThen = (maybePromise) => {
 
 class MyPromise {
   constructor(f) {
-    this.#state = PENDING;
+    this.state = PENDING;
 
-    this.#value = null;
+    this.value = null;
 
-    this.#next = null;
+    this.callbacks = null;
 
     const next = () => {
-      if (this.#state === FULFILLED &&
-          this.#next &&
-          typeof this.#next.onFulfilled === 'function')
-        this.#next.onFulfilled(this.#value);
-      if (this.#state === REJECTED &&
-          this.#next &&
-          typeof this.#next.onRejected === 'function')
-        this.#next.onRejected(this.#value);
+      if (this.state === FULFILLED &&
+          this.callbacks &&
+          typeof this.callbacks.onFulfilled === 'function')
+        this.callbacks.onFulfilled(this.value);
+      if (this.state === REJECTED &&
+          this.callbacks &&
+          typeof this.callbacks.onRejected === 'function')
+        this.callbacks.onRejected(this.value);
     };
 
-    const fulfilled = (value) => {
-      this.#state = FULFILLED;
-      this.#value = error;
-      next();
-    };
-
-    const rejected = (error) => {
-      this.#state = REJECTED;
-      this.#value = error;
+    const fulfill = (value) => {
+      this.state = FULFILLED;
+      this.value = value;
       next();
     };
 
     const reject = (error) => {
-      rejected(error);
+      this.state = REJECTED;
+      this.value = error;
+      next();
     };
 
     const resolve = (value) => {
+      const then = maybeThen(value);
       try {
-        const then = maybeThen(value);
-        if (then) {
+        if (then)
           exec(then.bind(value), resolve, reject);
-          return;
-        }
-        fulfilled(value);
+        else
+          fulfill(value);
       } catch(error) {
-        rejected(error);
+        reject(error);
       }
     };
 
     exec(f, resolve, reject);
   }
+
+  chain(callbacks) {
+    const self = this;
+    setTimeout(() => {
+      if (self.state === PENDING)
+        self.callbacks = callbacks;
+      else if (self.state === FULFILLED &&
+               typeof callbacks.onFulfilled === 'function')
+        callbacks.onFulfilled(self.value);
+      else if (self.state === REJECTED &&
+               typeof callbacks.onRejected === 'function')
+        callbacks.onRejected(self.value);
+    });
+  }
+
+  then(onFulfilled, onRejected) {
+    const self = this;
+    return new MyPromise((resolve, reject) => {
+      self.chain(Callbacks(
+        (value) => {
+          if (typeof onFulfilled === 'function')
+            try {
+              resolve(onFulfilled(value));
+            } catch(error) {
+              reject(error);
+            }
+          else
+            resolve(value);
+        },
+        (error) => {
+          if (typeof onRejected === 'function')
+            resolve(onRejected(error));
+          else
+            reject(error);
+        }
+      ));
+    });
+  }
 }
+
+promise = new MyPromise((resolve, reject) => {
+  setTimeout(() => resolve('resolved first one'), 1000);
+});
+
+promise
+  .then((res) => {
+    console.log(res);
+    return new MyPromise((resolve, reject) => {
+      setTimeout(() => resolve('resolved second one after ' + res), 1000);
+    });
+  })
+  .then(res => {
+    console.log(res);
+  });
