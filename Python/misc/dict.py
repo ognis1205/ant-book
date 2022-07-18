@@ -1,6 +1,7 @@
 import sys
 import json
 from collections import OrderedDict, defaultdict
+from collections.abc import Sequence, Mapping
 from io import StringIO
 import pprint
 from re import split
@@ -69,6 +70,7 @@ def main():
         pprint.pprint(d)
         print(retrieve(d, ['class', 'students', 1]))
         print(retrieve(d, ['classes', 'students', 1]))
+        walk(d, lambda p, v: print(f'path: {p}, value: {v}'))
 
 
 def factory():
@@ -87,6 +89,17 @@ def retrieve(obj, path):
         return obj
     except KeyError:
         return None
+
+
+def walk(obj, callback, path=[]):
+    if isinstance(obj, list):
+        for i in range(len(obj)):
+            walk(obj[i], callback, path + [i])
+    elif isinstance(obj, dict):
+        for k in obj.keys():
+            walk(obj[k], callback, path + [k])
+    else:
+        callback(path, obj)
 
 
 if __name__ == '__main__':
