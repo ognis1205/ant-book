@@ -112,7 +112,11 @@ class MyPromise {
         },
         (error) => {
           if (onRejected) {
-            resolve(onRejected(error))
+            try {
+              reject(onRejected(error))
+            } catch(error) {
+              reject(error);
+            }
           } else {
             reject(error);
           }
@@ -149,7 +153,14 @@ promise
   .then((value) => {
     console.log(value);
     return new MyPromise((resolve, reject) => {
-      resolve(value + ' and second one');
+      resolve(new MyPromise((resolve, reject) => {
+        setTimeout(() => {
+          resolve(value + ' and second one');
+        });
+      }))
+    })
+    .then((value) => {
+      return value + ' plus inner promise';
     });
   })
   .then((value) => {
