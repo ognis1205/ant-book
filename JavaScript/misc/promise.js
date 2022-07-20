@@ -4,70 +4,74 @@ const FULFILLED = Symbol('FULFILLED');
 
 const REJECTED = Symbol('REJECTED');
 
-const exec = (f, onFulfilled, onRejected) => {
-  let errorIsHandled = false;
+const exec = (f, resolve, reject) => {
+  let isRejected = false;
   try {
     f(
-      (value) => {
-        onFulfilled(value);
-      },
+      (value) =>
+        resolve(value),
       (error) => {
-        errorIsHandled = true;
-        onRejected(error);
+        isRejected = true;
+        reject(error);
       }
     );
   } catch(error) {
-    if (errorIsHandled) return;
-    onRejected(error);
+    if (isRejected) return;
+    reject(error);
   }
 };
 
-const Callbacks = (onFulfilled, onRejected) => ({
-  onFulfilled: onFulfilled,
-  onRejected: onRejected,
-});
-
 const maybeThen = (maybePromise) => {
-  if (maybePromise instanceof MyPromise &&
-      typeof maybePromise.then == 'function')
+  if (maybePromise instanceof MyPromise)
     return maybePromise.then;
   return null;
 };
 
+class EventHandler {
+  constructor(onFulfilled, onRejected) {
+    this.onFulfilled = onFulfilled;
+    this.onRejected = onRejected;
+  }
+}
+
 class MyPromise {
   constructor(f) {
     this.state = PENDING;
-
+    
     this.value = null;
-
-    this.callbacks = null;
-
-    const next = () => {
-      if (this.state === FULFILLED &&
-          this.callbacks &&
-          typeof this.callbacks.onFulfilled === 'function')
-        this.callbacks.onFulfilled(this.value);
-      if (this.state === REJECTED &&
-          this.callbacks &&
-          typeof this.callbacks.onRejected === 'function')
-        this.callbacks.onRejected(this.value);
+    
+    this.handler = null;
+    
+    const callback = () => {
+      if (
+        this.state === FULFILLED &&
+        this.handler &&
+        typeof this.handler.onFulfilled === 'function'
+      ) {
+        this.handler.onFulfilled(this.value);
+      } else if (
+        this.state === REJECTED &&
+        this.handler &&
+        typeof this.handler.onRejected === 'function') {
+        this.handler.onRejected(this.value);
+      }
     };
 
     const fulfill = (value) => {
       this.state = FULFILLED;
       this.value = value;
-      next();
+      callback();
     };
 
     const reject = (error) => {
       this.state = REJECTED;
       this.value = error;
-      next();
+      callback();
     };
 
     const resolve = (value) => {
-      const then = maybeThen(value);
       try {
+        const then = maybeThen(value);
         if (then)
           exec(then.bind(value), resolve, reject);
         else
@@ -80,56 +84,84 @@ class MyPromise {
     exec(f, resolve, reject);
   }
 
-  chain(callbacks) {
-    const self = this;
+  addHandler = (onFulfilled, onRejected) => {
     setTimeout(() => {
-      if (self.state === PENDING)
-        self.callbacks = callbacks;
-      else if (self.state === FULFILLED &&
-               typeof callbacks.onFulfilled === 'function')
-        callbacks.onFulfilled(self.value);
-      else if (self.state === REJECTED &&
-               typeof callbacks.onRejected === 'function')
-        callbacks.onRejected(self.value);
+      if (this.state === PENDING) {
+        this.handler = new EventHandler(onFulfilled, onRejected);
+      } else if (this.state === FULFILLED && typeof onFulfilled === 'function') {
+        onFulfilled(this.value);
+      } else if (this.state === REJECTED && typeof onRejected === 'function') {
+        onRejected(this.value);
+      }
     });
-  }
+  };
 
-  then(onFulfilled, onRejected) {
-    const self = this;
+  then = (onFulfilled, onRejected) => {
     return new MyPromise((resolve, reject) => {
-      self.chain(Callbacks(
+      this.addHandler(
         (value) => {
-          if (typeof onFulfilled === 'function')
+          if (onFulfilled) {
             try {
               resolve(onFulfilled(value));
             } catch(error) {
               reject(error);
             }
-          else
+          } else {
             resolve(value);
+          }
         },
         (error) => {
-          if (typeof onRejected === 'function')
-            resolve(onRejected(error));
-          else
+          if (onRejected) {
+            resolve(onRejected(error))
+          } else {
             reject(error);
+          }
         }
-      ));
+      );
     });
-  }
+  };
+
+  catch = (onRejected) => {
+    return new MyPromise((resolve, reject) => {
+      this.addHandler(
+        (value) => {
+          resolve(value);
+        },
+        (error) => {
+          try {
+            resolve(onRejected(error));
+          } catch(error) {
+            reject(error);
+          }
+        }
+      );
+    });
+  };
 }
 
-promise = new MyPromise((resolve, reject) => {
-  setTimeout(() => resolve('resolved first one'), 1000);
+const promise = new MyPromise((resolve, reject) => {
+  setTimeout(() => {
+    resolve('first one');
+  });
 });
 
 promise
-  .then((res) => {
-    console.log(res);
+  .then((value) => {
+    console.log(value);
     return new MyPromise((resolve, reject) => {
-      setTimeout(() => resolve('resolved second one after ' + res), 1000);
+      resolve(value + ' and second one');
     });
   })
-  .then(res => {
-    console.log(res);
-  });
+  .then((value) => {
+    console.log(value);
+    throw new Error('error occured');
+  })
+  .then(
+    (value) => {
+      console.log(value);
+    })
+  .catch(
+    (error) => {
+      console.log('error catched');
+    }
+  );
