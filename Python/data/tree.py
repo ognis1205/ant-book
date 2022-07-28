@@ -2,10 +2,57 @@ import sys
 from abc import abstractmethod
 from dataclasses import dataclass, field
 from io import StringIO
+from itertools import zip_longest, chain, repeat
 from re import split
 from textwrap import dedent
 from traceback import format_exc
 from typing import Protocol, TypeVar, MutableSequence, List
+
+
+def separate_by_card(node):
+    card = lambda n: sum(card(c) for c in n.children) + 1
+    lhs = sorted([c for c in node.children], key=lambda n: card(n))
+    rhs = []
+    while lhs and sum([card(n) for n in rhs]) < sum([card(n) for n in lhs]):
+        rhs.append(lhs.pop())
+    return lhs, rhs
+
+
+def pptree(node, separate, indent='', state='updown'):
+    name = str(node)
+    up, down = separate(node)
+
+    for child in up:     
+        pptree(
+            child,
+            separate,
+            f'{indent}{" " if "up" in state else "|"}{" " * len(name)}',
+            'up' if up.index(child) == 0 else '')
+
+    if state == 'up':
+        l = '┌'
+    elif state == 'down':
+        l = '└'
+    elif state == 'updown':
+        l = ' '
+    else:
+        l = '├'
+
+    if up:
+        r = '┤'
+    elif down:
+        r = '┐'
+    else:
+        r = ''
+
+    print(f'{indent}{l}{name}{r}')
+
+    for child in down:
+        pptree(
+            child,
+            separate,
+            f'{indent}{" " if "down" in state else "│"}{" " * len(name)}',
+            'down' if down.index(child) is len(down) - 1 else '')
 
 
 class Comparable(Protocol):
@@ -23,6 +70,9 @@ NodeType = TypeVar('NodeType', bound='Node')
 class Node:
     data: ComparableType
     children: List[NodeType] = field(default_factory=list)
+
+    def __str__(self):
+        return str(self.data)
 
 
 class UserInput:
@@ -50,11 +100,11 @@ class UserInput:
 
 
 INPUT = dedent('''\
-[2,4]
-[1,2]
-[3,6]
-[1,3]
-[2,5]
+[2000,4000]
+[1000,2000]
+[3000,6000]
+[1000,3000]
+[2000,5000]
 ''')
 
 
@@ -76,7 +126,7 @@ def main():
             p.children.append(c)
             children.add(c.data)
         p = nodes[next(iter(set(nodes.keys()) - children))]
-        print(f'test: {p}')
+        pptree(p, separate_by_card)
 
 
 if __name__ == '__main__':
