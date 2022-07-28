@@ -18,22 +18,22 @@ def separate_by_card(node):
     return lhs, rhs
 
 
-def pptree(node, separate, indent='', state='updown'):
+def pptree_horizontally(node, separate, indent='', prev='topbottom'):
     name = str(node)
     up, down = separate(node)
 
     for child in up:     
-        pptree(
+        pptree_horizontally(
             child,
             separate,
-            f'{indent}{" " if "up" in state else "|"}{" " * len(name)}',
-            'up' if up.index(child) == 0 else '')
+            f'{indent}{" " if "top" in prev else "|"}{" " * len(name)}',
+            'top' if up.index(child) == 0 else '')
 
-    if state == 'up':
+    if prev == 'top':
         l = '┌'
-    elif state == 'down':
+    elif prev == 'bottom':
         l = '└'
-    elif state == 'updown':
+    elif prev == 'topbottom':
         l = ' '
     else:
         l = '├'
@@ -48,11 +48,15 @@ def pptree(node, separate, indent='', state='updown'):
     print(f'{indent}{l}{name}{r}')
 
     for child in down:
-        pptree(
+        pptree_horizontally(
             child,
             separate,
-            f'{indent}{" " if "down" in state else "│"}{" " * len(name)}',
-            'down' if down.index(child) is len(down) - 1 else '')
+            f'{indent}{" " if "bottom" in prev else "│"}{" " * len(name)}',
+            'bottom' if down.index(child) is len(down) - 1 else '')
+
+
+def pptree_vertically(node):
+    pass
 
 
 class Comparable(Protocol):
@@ -109,6 +113,18 @@ INPUT = dedent('''\
 [4000,7000]
 [4000,8000]
 [4000,9000]
+[4000,1100]
+[4000,1200]
+[3000,1300]
+[3000,1400]
+[7000,1500]
+[7000,1600]
+[7000,1700]
+[7000,1800]
+[7000,1900]
+[7000,1110]
+[3000,1120]
+[3000,1130]
 ''')
 
 
@@ -130,7 +146,7 @@ def main():
             p.children.append(c)
             children.add(c.data)
         p = nodes[next(iter(set(nodes.keys()) - children))]
-        pptree(p, separate_by_card)
+        pptree_horizontally(p, separate_by_card)
 
 
 if __name__ == '__main__':
