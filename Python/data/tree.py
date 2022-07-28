@@ -69,6 +69,7 @@ NodeType = TypeVar('NodeType', bound='Node')
 @dataclass
 class Node:
     data: ComparableType
+
     children: List[NodeType] = field(default_factory=list)
 
     def __str__(self):
@@ -105,6 +106,9 @@ INPUT = dedent('''\
 [3000,6000]
 [1000,3000]
 [2000,5000]
+[4000,7000]
+[4000,8000]
+[4000,9000]
 ''')
 
 
