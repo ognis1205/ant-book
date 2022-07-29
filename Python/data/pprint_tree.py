@@ -55,8 +55,28 @@ def pptree_horizontally(node, separate, indent='', prev='topbottom'):
             'bottom' if down.index(child) is len(down) - 1 else '')
 
 
-def pptree_vertically(node):
-    pass
+def concat(*columns, joiners=()):
+    widths = tuple(max(map(len, column), default=0) for column in columns)
+    return list(
+        joiner.join(
+            row.center(width)
+            for row, width in zip(rows, widths)
+        )
+        for rows, joiner in zip(zip_longest(*columns, fillvalue=''), chain(joiners, repeat(' ')))
+    )
+
+
+def vertical_tree(node, separate):
+    name = str(node)
+    lhs, rhs = separate(node)
+    tree = lambda n: vertical_tree(n, separate)
+    lhs = concat(*[tree(c) for c in lhs])
+    rhs = concat(*[tree(c) for c in rhs])
+    return concat([''] + lhs, [name], [''] + rhs)
+
+
+def pptree_vertically(node, separate):
+    print('\n'.join(vertical_tree(node, separate)))
 
 
 class Comparable(Protocol):
@@ -130,10 +150,6 @@ INPUT = dedent('''\
 ''')
 
 
-def tree(node):
-    pass
-
-
 def main():
     with UserInput(INPUT) as user_input:
         nodes = dict()
@@ -149,6 +165,7 @@ def main():
             children.add(c.data)
         p = nodes[next(iter(set(nodes.keys()) - children))]
         pptree_horizontally(p, separate_by_card)
+        pptree_vertically(p, separate_by_card)
 
 
 if __name__ == '__main__':
