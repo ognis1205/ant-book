@@ -30,14 +30,13 @@ def balance(node: Node) -> Tuple[Sequence[Node], Sequence[Node]]:
     return lhs, rhs
 
 
-def format_tree(node: Node, acc: Sequence[str], indent='', prev='topbottom'):
+def htree(node: Node, indent='', prev='topbottom'):
     name = str(node.value)
     up, down = balance(node)
 
     for child in up:
-        format_tree(
+        htree(
             child,
-            acc,
             f'{indent}{" " if "top" in prev else "|"}{" " * len(name)}',
             'top' if up.index(child) == 0 else '')
 
@@ -57,12 +56,11 @@ def format_tree(node: Node, acc: Sequence[str], indent='', prev='topbottom'):
     else:
         r = ' '
 
-    acc.append(f'{indent}{l}{name}{r}')
+    print(f'{indent}{l}{name}{r}')
 
     for child in down:
-        format_tree(
+        htree(
             child,
-            acc,
             f'{indent}{" " if "bottom" in prev else "|"}{" " * len(name)}',
             'bottom' if down.index(child) == len(down) - 1 else '')
 
@@ -119,21 +117,20 @@ INPUT = dedent('''\
 
 def main():
     with UserInput(INPUT) as user_input:
-        adjacency = dict()
+        memo = dict()
         children = set()
         while edge := user_input.readline(
                 parse=int,
                 is_array=True,
                 delimiter=r'\s*,\s*',
                 clean=lambda x: x.lstrip('[').rstrip(']')):
-            p = adjacency.setdefault(edge[0], Node(edge[0]))
-            c = adjacency.setdefault(edge[1], Node(edge[1]))
+            p = memo.setdefault(edge[0], Node(edge[0]))
+            c = memo.setdefault(edge[1], Node(edge[1]))
             p.children.append(c)
             children.add(edge[1])
-        roots = set(adjacency.keys()) - children
-        tree = []
-        format_tree(adjacency[next(iter(roots))], tree)
-        print('\n'.join(tree))
+        roots = set(memo.keys()) - children
+        for root in roots:
+            htree(memo[root])
 
 
 if __name__ == '__main__':
