@@ -128,8 +128,7 @@ def main():
             c = memo.setdefault(edge[1], Node(edge[1]))
             p.children.append(c)
             children.add(edge[1])
-        roots = set(memo.keys()) - children
-        for root in roots:
+        for root in set(memo.keys()) - children:
             htree(memo[root])
 
 
