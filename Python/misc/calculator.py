@@ -41,10 +41,14 @@ class Lexer:
         self._raw_string = iter(raw_string)
         self.advance()
 
+    @property
+    def has_next(self):
+        return self.next_char is not None
+
     def tokens(self) -> Iterator[Token]:
-        while self.next_char:
+        while self.has_next:
             if self.next_char == '.' or self.next_char in Lexer.DIGITS:
-                yield Token(TokenType.NUM, self._parse_number())
+                yield Token(TokenType.NUM, self.consume_number())
             elif self.next_char == '+':
                 yield Token(TokenType.ADD)
                 self.advance()
@@ -74,7 +78,7 @@ class Lexer:
         except StopIteration:
             self.next_char = None
 
-    def _parse_number(self) -> float:
+    def consume_number(self) -> float:
         acc, num_decimal_point = self.next_char, 1 if self.next_char == '.' else 0
         self.advance()
         while self.next_char and (self.next_char == '.' or self.next_char in Lexer.DIGITS):
@@ -87,17 +91,16 @@ class Lexer:
         return float(acc)
 
 
-class AST:
+AST = TypeVar('AST', bound='AbstractSyntaxTree')
+
+class AbstractSyntaxTree:
     @abstractmethod
     def __repr__(self):
         pass
 
 
-ASTType = TypeVar('ASTType', bound='AST')
-
-
 @dataclass
-class Number(AST):
+class Number(AbstractSyntaxTree):
     value: float
 
     def __repr__(self):
@@ -105,36 +108,36 @@ class Number(AST):
 
 
 @dataclass
-class Add(AST, Generic[ASTType]):
-    lhs: ASTType
-    rhs: ASTType
+class Add(AbstractSyntaxTree, Generic[AST]):
+    lhs: AST
+    rhs: AST
 
     def __repr__(self):
         return f'{repr(self.lhs)} + {repr(self.rhs)}'
 
 
 @dataclass
-class Sub(AST, Generic[ASTType]):
-    lhs: ASTType
-    rhs: ASTType
+class Sub(AbstractSyntaxTree, Generic[AST]):
+    lhs: AST
+    rhs: AST
 
     def __repr__(self):
         return f'{repr(self.lhs)} - {repr(self.rhs)}'
 
 
 @dataclass
-class Mul(AST, Generic[ASTType]):
-    lhs: ASTType
-    rhs: ASTType
+class Mul(AbstractSyntaxTree, Generic[AST]):
+    lhs: AST
+    rhs: AST
 
     def __repr__(self):
         return f'{repr(self.lhs)} * {repr(self.rhs)}'
 
 
 @dataclass
-class Div(AST, Generic[ASTType]):
-    lhs: ASTType
-    rhs: ASTType
+class Div(AbstractSyntaxTree, Generic[AST]):
+    lhs: AST
+    rhs: AST
 
     def __repr__(self):
         return f'{repr(self.lhs)} / {repr(self.rhs)}'
@@ -144,6 +147,18 @@ class Parser:
     def __init__(self, raw_string):
         self._tokens = Lexer(raw_string).tokens()
         self.advance()
+
+    @property
+    def has_next(self):
+        return self.next_token is not None
+
+    @property
+    def is_additive(self):
+        return self.next_token.token_type in (TokenType.ADD, TokenType.SUB)
+
+    @property
+    def is_cumulative(self):
+        return self.next_token.token_type in (TokenType.MUL, TokenType.DIV)
 
     def AST(self) -> AST:
         if not self.next_token:
@@ -155,18 +170,18 @@ class Parser:
 
     def expr(self) -> AST:
         ast = self.term()
-        while self.next_token and (self.next_token.token_type == TokenType.ADD or self.next_token.token_type == TokenType.SUB):
-            if self.next_token.token_type == TokenType.ADD:
+        while self.has_next and self.is_additive:
+            if self.next_token.token_type is TokenType.ADD:
                 self.advance()
                 ast = Add(ast, self.term())
-            elif self.next_token.token_type == TokenType.SUB:
+            elif self.next_token.token_type is TokenType.SUB:
                 self.advance()
                 ast = Sub(ast, self.term())
         return ast
 
     def term(self) -> AST:
         ast = self.factor()
-        while self.next_token and (self.next_token.token_type == TokenType.MUL or self.next_token.token_type == TokenType.DIV):
+        while self.has_next and self.is_cumulative:
             if self.next_token.token_type == TokenType.MUL:
                 self.advance()
                 ast = Mul(ast, self.factor())
@@ -234,7 +249,7 @@ class UserInput:
 
 
 INPUT = dedent('''\
-(1 + 2) * 3.5 - 9.0 / 2
+(1 + 2 * (3.5 - 9.0)) / 2
 ''')
 
 
