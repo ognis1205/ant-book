@@ -13,6 +13,7 @@ from typing import (
     Iterator,
     TypeVar,
     Generic,
+    Protocol,
 )
 
 
@@ -45,9 +46,13 @@ class Lexer:
     def has_next(self):
         return self.next_char is not None
 
+    @property
+    def is_numeric(self):
+        return self.next_char == '.' or self.next_char in Lexer.DIGITS
+
     def tokens(self) -> Iterator[Token]:
         while self.has_next:
-            if self.next_char == '.' or self.next_char in Lexer.DIGITS:
+            if self.is_numeric:
                 yield Token(TokenType.NUM, self.consume_number())
             elif self.next_char == '+':
                 yield Token(TokenType.ADD)
@@ -91,16 +96,18 @@ class Lexer:
         return float(acc)
 
 
-AST = TypeVar('AST', bound='AbstractSyntaxTree')
-
-class AbstractSyntaxTree:
+class AST(Protocol):
     @abstractmethod
     def __repr__(self):
         pass
 
+LHS = TypeVar('LHS', bound='AST')
+
+RHS = TypeVar('RHS', bound='AST')
+
 
 @dataclass
-class Number(AbstractSyntaxTree):
+class Number:
     value: float
 
     def __repr__(self):
@@ -108,36 +115,36 @@ class Number(AbstractSyntaxTree):
 
 
 @dataclass
-class Add(AbstractSyntaxTree, Generic[AST]):
-    lhs: AST
-    rhs: AST
+class Add(Generic[LHS, RHS]):
+    lhs: LHS
+    rhs: RHS
 
     def __repr__(self):
         return f'{repr(self.lhs)} + {repr(self.rhs)}'
 
 
 @dataclass
-class Sub(AbstractSyntaxTree, Generic[AST]):
-    lhs: AST
-    rhs: AST
+class Sub(Generic[LHS, RHS]):
+    lhs: LHS
+    rhs: RHS
 
     def __repr__(self):
         return f'{repr(self.lhs)} - {repr(self.rhs)}'
 
 
 @dataclass
-class Mul(AbstractSyntaxTree, Generic[AST]):
-    lhs: AST
-    rhs: AST
+class Mul(Generic[LHS, RHS]):
+    lhs: LHS
+    rhs: RHS
 
     def __repr__(self):
         return f'{repr(self.lhs)} * {repr(self.rhs)}'
 
 
 @dataclass
-class Div(AbstractSyntaxTree, Generic[AST]):
-    lhs: AST
-    rhs: AST
+class Div(Generic[LHS, RHS]):
+    lhs: LHS
+    rhs: RHS
 
     def __repr__(self):
         return f'{repr(self.lhs)} / {repr(self.rhs)}'
