@@ -14,17 +14,6 @@ from typing import (
 )
 
 
-class BoxDrawings(enum.Enum):
-    SP = ' '
-    HZ = '─'
-    DR = '┌'
-    DL = '┐'
-    UL = '┘'
-    UR = '└'
-    DH = '┬'
-    UH = '┴'
-
-
 NodeType = TypeVar('NodeType', bound='Node')
 
 @dataclass
@@ -38,17 +27,16 @@ class Node(Generic[NodeType]):
 
 def concat(*columns, joiners=()):
     widths = tuple(max(map(len, c), default=0) for c in columns)
-    return tuple(
+    return list(
         joiner.join(
             x.center(width)
             for x, width in zip(row, widths)
         )
-        for row, joiner in zip(zip_longest(*columns, fillvalue=''), chain(joiners, repeat(BoxDrawings.SP.value)))
+        for row, joiner in zip(zip_longest(*columns, fillvalue=''), chain(joiners, repeat(' ')))
     )
 
 
 def get_str_width(column):
-    print(column)
     if not column or not column[0]:
         return (None, None)
     indices = [(m.start(), m.end()) for m in finditer(r'\S+', column[0])]
@@ -56,14 +44,14 @@ def get_str_width(column):
 
 
 def get_column_width(column):
-    if not column or not column[0]:
+    if not column:
         return 0
-    return len(column[0])
+    return max(map(len, column), default=0)
 
 
 def draw(column, box_drawing):
-    l_padding = BoxDrawings.SP.value if box_drawing is BoxDrawings.DR.value else BoxDrawings.SP.value
-    r_padding = BoxDrawings.SP.value if box_drawing is BoxDrawings.DL.value else BoxDrawings.SP.value
+    l_padding = ' ' if box_drawing == '┌' else '─'
+    r_padding = ' ' if box_drawing == '┐' else '─'
     w = get_column_width(column)
     l, r = get_str_width(column)
     if l is not None and r is not None:
@@ -78,21 +66,21 @@ def draw(column, box_drawing):
 
 
 def bifurcate(*columns):
-    return concat(*list(map(lambda c: draw(c, BoxDrawings.DH.value), columns)), joiners=(BoxDrawings.HZ.value,))
+    return concat(*list(map(lambda c: draw(c, '┬'), columns)), joiners=('─',))
 
 
 def left(*columns):
     head, *tail = columns
-    return concat(draw(head, BoxDrawings.DR.value), bifurcate(*tail), joiners=(BoxDrawings.HZ.value,))
+    return concat(draw(head, '┌'), bifurcate(*tail), joiners=('─',))
 
 
 def right(*columns):
     *head, tail = columns
-    return concat(bifurcate(*head), draw(tail, BoxDrawings.DL.value), joiners=(BoxDrawings.HZ.value,))
+    return concat(bifurcate(*head), draw(tail, '┐'), joiners=('─',))
 
 
 def branches(lhs, rhs):
-    return concat(lhs, rhs, joiners=((BoxDrawings.UH.value if rhs else BoxDrawings.UL.value) if lhs else BoxDrawings.UR.value,))
+    return concat(lhs, rhs, joiners=(('┴' if rhs else '┘') if lhs else '└',))
 
 
 def balance(node):
@@ -109,7 +97,11 @@ def vtree(node):
     lhs, rhs = balance(node)
     lhs = left(*[vtree(n) for n in lhs]) if lhs else []
     rhs = right(*[vtree(n) for n in rhs]) if rhs else []
-    return concat([name], branches(lhs, rhs))
+    lw = get_column_width(lhs)
+    rw = get_column_width(rhs)
+    name = f'{" " * lw}{name}{" " * rw}'
+#    return concat([name], branches(lhs, rhs))
+    return [name] + branches(lhs, rhs)
 
 
 class UserInput:
@@ -177,7 +169,7 @@ def main():
             children.add(c.value)
         for root in set(memo.keys()) - children:
             tree = vtree(memo[root])
-            print(tree)
+            print('\n'.join(tree))
 
 
 if __name__ == '__main__':
