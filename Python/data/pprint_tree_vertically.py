@@ -49,7 +49,7 @@ def get_column_width(column):
     return max(map(len, column), default=0)
 
 
-def draw(column, box_drawing):
+def stack(column, box_drawing):
     l_padding = ' ' if box_drawing == '┌' else '─'
     r_padding = ' ' if box_drawing == '┐' else '─'
     w = get_column_width(column)
@@ -66,17 +66,17 @@ def draw(column, box_drawing):
 
 
 def bifurcate(*columns):
-    return concat(*list(map(lambda c: draw(c, '┬'), columns)), joiners=('─',))
+    return concat(*list(map(lambda c: stack(c, '┬'), columns)), joiners=('─',))
 
 
 def left(*columns):
     head, *tail = columns
-    return concat(draw(head, '┌'), bifurcate(*tail), joiners=('─',))
+    return concat(stack(head, '┌'), bifurcate(*tail), joiners=('─',))
 
 
 def right(*columns):
     *head, tail = columns
-    return concat(bifurcate(*head), draw(tail, '┐'), joiners=('─',))
+    return concat(bifurcate(*head), stack(tail, '┐'), joiners=('─',))
 
 
 def branches(lhs, rhs):
