@@ -1,28 +1,103 @@
 import sys
-from dataclasses import dataclass
-from enum import Enum
+import enum
+from abc import abstractmethod
+from dataclasses import dataclass, field
+from io import StringIO
+from re import split
+from textwrap import dedent
 from traceback import format_exc
-from typing import Optional
+from typing import (
+    Optional,
+    Callable,
+    Any,
+    Iterator,
+    TypeVar,
+    Generic,
+)
 
 
-class TokenType(Enum):
-    NUM = 1
-    ADD = 2
-    SUB = 3
-    MUL = 4
-    DIV = 5
-    LPR = 6
-    RPR = 7
+class TokenType(enum.Enum):
+    NUM = enum.auto()
+    ADD = enum.auto()
+    SUB = enum.auto()
+    MUL = enum.auto()
+    DIV = enum.auto()
+    LPR = enum.auto()
+    RPR = enum.auto()
 
 
 @dataclass
 class Token:
     token_type: TokenType
-    value: Optional[float] = None
+    value: Optional[float] = field(default=None)
+
+
+class Lexer:
+    SPACES = ' \t'
+
+    DIGITS = '1234567890'
+
+    def __init__(self, raw_string: str):
+        self._raw_string = iter(raw_string)
+        self.advance()
+
+    def tokens(self) -> Iterator[Token]:
+        while self.next_char:
+            if self.next_char == '.' or self.next_char in Lexer.DIGITS:
+                yield Token(TokenType.NUM, self._parse_number())
+            elif self.next_char == '+':
+                yield Token(TokenType.ADD)
+                self.advance()
+            elif self.next_char == '-':
+                yield Token(TokenType.SUB)
+                self.advance()
+            elif self.next_char == '*':
+                yield Token(TokenType.MUL)
+                self.advance()
+            elif self.next_char == '/':
+                yield Token(TokenType.DIV)
+                self.advance()
+            elif self.next_char == '(':
+                yield Token(TokenType.LPR)
+                self.advance()
+            elif self.next_char == ')':
+                yield Token(TokenType.RPR)
+                self.advance()
+            elif self.next_char in Lexer.SPACES:
+                self.advance()
+            else:
+                raise Exception(f'invalid character: {self.next_char}')
+
+    def advance(self) -> str:
+        try:
+            self.next_char = next(self._raw_string)
+        except StopIteration:
+            self.next_char = None
+
+    def _parse_number(self) -> float:
+        acc, num_decimal_point = self.next_char, 1 if self.next_char == '.' else 0
+        self.advance()
+        while self.next_char and (self.next_char == '.' or self.next_char in Lexer.DIGITS):
+            if self.next_char == '.':
+                num_decimal_point += 1
+                if num_decimal_point > 1:
+                    break
+            acc += self.next_char
+            self.advance()
+        return float(acc)
+
+
+class AST:
+    @abstractmethod
+    def __repr__(self):
+        pass
+
+
+ASTType = TypeVar('ASTType', bound='AST')
 
 
 @dataclass
-class Number:
+class Number(AST):
     value: float
 
     def __repr__(self):
@@ -30,144 +105,95 @@ class Number:
 
 
 @dataclass
-class Add:
-    lhs: any
-    rhs: any
+class Add(AST, Generic[ASTType]):
+    lhs: ASTType
+    rhs: ASTType
 
     def __repr__(self):
         return f'{repr(self.lhs)} + {repr(self.rhs)}'
 
 
 @dataclass
-class Subtratc:
-    lhs: any
-    rhs: any
+class Sub(AST, Generic[ASTType]):
+    lhs: ASTType
+    rhs: ASTType
 
     def __repr__(self):
         return f'{repr(self.lhs)} - {repr(self.rhs)}'
 
 
 @dataclass
-class Multiply:
-    lhs: any
-    rhs: any
+class Mul(AST, Generic[ASTType]):
+    lhs: ASTType
+    rhs: ASTType
 
     def __repr__(self):
         return f'{repr(self.lhs)} * {repr(self.rhs)}'
 
 
 @dataclass
-class Divide:
-    lhs: any
-    rhs: any
+class Div(AST, Generic[ASTType]):
+    lhs: ASTType
+    rhs: ASTType
 
     def __repr__(self):
         return f'{repr(self.lhs)} / {repr(self.rhs)}'
 
 
-class Lexer:
-    WHITESPACES = ' \n\t'
-
-    DIGITS = '0123456789'
-
-    def __init__(self, text):
-        self._text = iter(text)
-        self.advance()
-
-    def advance(self):
-        try:
-            self.next_char = next(self._text)
-        except StopIteration:
-            self.next_char = None
-
-    @property
-    def has_next(self):
-        return self.next_char is not None
-
-    @property
-    def has_whitespace(self):
-        return self.next_char in Lexer.WHITESPACES
-
-    @property
-    def has_numeric(self):
-        return self.next_char == '.' or self.next_char in Lexer.DIGITS
-
-    @property
-    def has_plus(self):
-        return self.next_char == '+'
-
-    @property
-    def has_minus(self):
-        return self.next_char == '-'
-
-    @property
-    def has_multiply(self):
-        return self.next_char == '*'
-
-    @property
-    def has_division(self):
-        return self.next_char == '/'
-
-    @property
-    def has_left_paren(self):
-        return self.next_char == '('
-
-    @property
-    def has_right_paren(self):
-        return self.next_char == ')'
-
-    def tokens(self):
-        while self.has_next:
-            if self.has_whitespace:
-                self.advance()
-            elif self.has_numeric:
-                yield self.parse_number()
-            elif self.has_plus:
-                self.advance()
-                yield Token(TokenType.ADD)
-            elif self.has_minus:
-                self.advance()
-                yield Token(TokenType.SUB)
-            elif self.has_multiply:
-                self.advance()
-                yield Token(TokenType.MUL)
-            elif self.has_division:
-                self.advance()
-                yield Token(TokenType.DIV)
-            elif self.has_left_paren:
-                self.advance()
-                yield Token(TokenType.LPR)
-            elif self.has_right_paren:
-                self.advance()
-                yield Token(TokenType.RPR)
-            else:
-                raise Exception(f'illegal character "{self.next_char}"')
-
-    def parse_number(self):
-        value = self.next_char
-        num_decimal_point = 0
-        self.advance()
-
-        while self.has_next and self.has_numeric:
-            if self.next_char == '.':
-                num_decimal_point += 1
-                if num_decimal_point > 1:
-                    break
-            value += self.next_char
-            self.advance()
-
-        if value.startswith('.'):
-            value = '0' + value
-        if value.endswith('.'):
-            value = value + '0'
-
-        return Token(TokenType.NUM, float(value))
-
-
 class Parser:
-    def __init__(self, tokens):
-        self._tokens = tokens
+    def __init__(self, raw_string):
+        self._tokens = Lexer(raw_string).tokens()
         self.advance()
+
+    def AST(self) -> AST:
+        if not self.next_token:
+            return None
+        ast = self.expr()
+        if self.next_token:
+            raise Exception(f'illegal expression: {self.next_token}')
+        return ast
+
+    def expr(self) -> AST:
+        ast = self.term()
+        while self.next_token and (self.next_token.token_type == TokenType.ADD or self.next_token.token_type == TokenType.SUB):
+            if self.next_token.token_type == TokenType.ADD:
+                self.advance()
+                ast = Add(ast, self.term())
+            elif self.next_token.token_type == TokenType.SUB:
+                self.advance()
+                ast = Sub(ast, self.term())
+        return ast
+
+    def term(self) -> AST:
+        ast = self.factor()
+        while self.next_token and (self.next_token.token_type == TokenType.MUL or self.next_token.token_type == TokenType.DIV):
+            if self.next_token.token_type == TokenType.MUL:
+                self.advance()
+                ast = Mul(ast, self.factor())
+            elif self.next_token.token_type == TokenType.DIV:
+                self.advance()
+                ast = Div(ast, self.factor())
+        return ast
+
+    def factor(self) -> AST:
+        if self.next_token.token_type == TokenType.LPR:
+            self.advance()
+            expr = self.expr()
+            if not self.next_token or self.next_token.token_type != TokenType.RPR:
+                raise Exception(f'invalid expression: {self.next_token}')
+            self.advance()
+            return Number(eval(repr(expr)))
+        elif self.next_token.token_type == TokenType.NUM:
+            value = self.next_token.value
+            self.advance()
+            return Number(value)
+        elif self.next_token.token_type == TokenType.ADD:
+            self.advance()
+            return Number(eval(repr(self.factor())))
+        elif self.next_token.token_type == TokenType.SUB:
+            self.advance()
+            return Number(- 1.0 * eval(repr(self.factor())))
+        raise Exception(f'invalid expression: {self.next_token}')
 
     def advance(self):
         try:
@@ -175,83 +201,52 @@ class Parser:
         except StopIteration:
             self.next_token = None
 
-    @property
-    def has_next(self):
-        return self.next_token is not None
 
-    @property
-    def has_additive(self):
-        return self.next_token.token_type in (TokenType.ADD, TokenType.SUB)
+Clean = Callable[[str], str]
 
-    @property
-    def has_multiplicative(self):
-        return self.next_token.token_type in (TokenType.MUL, TokenType.DIV)
+Parse = Callable[[str], Any]
 
-    def AST(self):
-        if not self.has_next:
-            return None
-        tree = self.expr()
-        if self.has_next:
-            raise Exception('invalid syntax')
-        return tree
+class UserInput:
+    def __init__(self, text: Optional[str] = None):
+        self._io = StringIO(text) if text else sys.stdin
 
-    def expr(self):
-        tree = self.term()
-        while self.has_next and self.has_additive:
-            if self.next_token.token_type == TokenType.ADD:
-                self.advance()
-                tree = Add(tree, self.term())
-            elif self.next_token.token_type == TokenType.SUB:
-                sels.advance()
-                tree = Subtract(tree, self.term())
-        return tree
+    def __enter__(self):
+        return self
 
-    def term(self):
-        tree = self.factor()
-        while self.has_next and self.has_multiplicative:
-            if self.next_token.token_type == TokenType.MUL:
-                self.advance()
-                tree = Multiply(tree, self.factor())
-            elif self.next_token.token_type == TokenType.DIV:
-                self.advance()
-                tree = Divide(tree, self.factor())
-        return tree
+    def __exit__(self, *_):
+        if hasattr(self._io, 'close'):
+            self._io.close()
 
-    def factor(self):
-        token = self.next_token
-        if token.token_type == TokenType.LPR:
-            self.advance()
-            tree = self.expr()
-            if self.next_token.token_type != TokenType.RPR:
-                raise Exception('invalid syntax')
-            self.advance()
-            return Number(eval(repr(tree)))
-        elif token.token_type == TokenType.NUM:
-            self.advance()
-            return Number(token.value)
-        elif token.token_type == TokenType.ADD:
-            self.advance()
-            return Number(eval(repr(self.factor())))
-        elif token.token_type == TokenType.SUB:
-            self.advance()
-            return Number(-1 * eval(repr(self.factor())))
-        raise Exception('invalid syntax')
+    def _readline(self, clean: Clean) -> Optional[str]:
+        if line := self._io.readline().strip():
+            return clean(line)
+        return None
+
+    def readline(
+            self,
+            isarray: bool = False,
+            delimiter: str = r'\s+',
+            clean: Clean = lambda x: x,
+            parse: Parse = str) -> Optional[str]:
+        if line := self._readline(clean):
+            return [parse(x) for x in split(delimiter, line)] if isarray else parse(line)
+        return None
 
 
-def interpret(raw_string):
-    lexer = Lexer(raw_string)
-    parser = Parser(lexer.tokens())
-    tree = parser.AST()
-    print(eval(repr(tree)))
+INPUT = dedent('''\
+(1 + 2) * 3.5 - 9.0 / 2
+''')
 
 
 def main():
-    while line := input('enter :'):
-        interpret(line)
+    with UserInput(INPUT) as user_input:
+        while line := user_input.readline():
+            print(line)
+            print(f'result: {eval(repr(Parser(line).AST()))}')
 
 
 if __name__ == '__main__':
     try:
         main()
-    except Exception:
+    except:
         print(format_exc(), file=sys.stderr)
