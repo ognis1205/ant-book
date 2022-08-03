@@ -97,11 +97,7 @@ def vtree(node):
     lhs, rhs = balance(node)
     lhs = left(*[vtree(n) for n in lhs]) if lhs else []
     rhs = right(*[vtree(n) for n in rhs]) if rhs else []
-    lw = get_column_width(lhs)
-    rw = get_column_width(rhs)
-    name = f'{" " * lw}{name}{" " * rw}'
-#    return concat([name], branches(lhs, rhs))
-    return [name] + branches(lhs, rhs)
+    return [f'{" " * get_column_width(lhs)}{name}{" " * get_column_width(rhs)}'] + branches(lhs, rhs)
 
 
 class UserInput:
