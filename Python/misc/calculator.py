@@ -50,6 +50,7 @@ class Lexer:
     def is_numeric(self):
         return self.next_char == '.' or self.next_char in Lexer.DIGITS
 
+    @property
     def tokens(self) -> Iterator[Token]:
         while self.has_next:
             if self.is_numeric:
@@ -152,7 +153,7 @@ class Div(Generic[LHS, RHS]):
 
 class Parser:
     def __init__(self, raw_string):
-        self._tokens = Lexer(raw_string).tokens()
+        self._tokens = Lexer(raw_string).tokens
         self.advance()
 
     @property
@@ -167,6 +168,7 @@ class Parser:
     def is_cumulative(self):
         return self.next_token.token_type in (TokenType.MUL, TokenType.DIV)
 
+    @property
     def AST(self) -> AST:
         if not self.next_token:
             return None
@@ -264,7 +266,7 @@ def main():
     with UserInput(INPUT) as user_input:
         while line := user_input.readline():
             print(line)
-            print(f'result: {eval(repr(Parser(line).AST()))}')
+            print(f'result: {eval(repr(Parser(line).AST))}')
 
 
 if __name__ == '__main__':
