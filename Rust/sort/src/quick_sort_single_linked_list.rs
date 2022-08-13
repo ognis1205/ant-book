@@ -1,4 +1,5 @@
 use std::io;
+use std::ptr;
 use std::str;
 
 macro_rules! parse {
@@ -33,7 +34,7 @@ fn tokenize<'a>(line: &'a mut String) -> str::SplitWhitespace<'a> {
 }
 
 #[derive(Debug)]
-pub struct List<T: Copy> {
+pub struct List<T: Copy, PartialOrd> {
     head: Option<Box<Node<T>>>,
 }
 
@@ -60,6 +61,30 @@ impl<T: Copy> List<T> {
         }
     }
 
+    fn partition(&mut self, lo: Option<Node<T>>, hi: Option<Node<T>>) -> Option<Node<T>> {
+        match lo.zip(hi) {
+            Some((ref mut lo, ref mut hi)) => {
+                if ptr::eq(lo, hi) {
+                    return None;
+                } else {
+                    let pivot = hi.data;
+                    let mut prev = None;
+                    let mut curr = &lo;
+                    while !ptr::eq(lo, hi) {
+                        if lo.data <= pivot {
+                            Node::swap(curr, lo);
+                            curr = curr.next;
+                        }
+                        lo = lo.next;
+                    }
+                    Node::swap(curr, hi);
+                    return prev;
+                }
+            }
+            None => return None,
+        }
+    }
+
     fn length(&self) -> usize {
         match self.head {
             Some(ref node) => node.length(),
@@ -69,6 +94,12 @@ impl<T: Copy> List<T> {
 }
 
 impl<T: Copy> Node<T> {
+    fn swap(lhs: &mut Node<T>, rhs: &mut Node<T>) -> () {
+        let tmp = lhs.data;
+        lhs.data = rhs.data;
+        rhs.data = tmp;
+    }
+
     fn append(&mut self, data: T) -> () {
         match self.next {
             Some(ref mut node) => node.append(data),

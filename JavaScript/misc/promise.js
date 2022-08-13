@@ -133,7 +133,7 @@ class MyPromise {
         },
         (error) => {
           try {
-            resolve(onRejected(error));
+            reject(onRejected(error));
           } catch(error) {
             reject(error);
           }
@@ -169,7 +169,7 @@ promise
   })
   .then(
     (value) => {
-      console.log(value);
+      console.log('not catched ' + value);
     })
   .catch(
     (error) => {
