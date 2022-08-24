@@ -1,0 +1,38 @@
+body,html {
+    margin: 0;
+    padding: 0;
+}
+
+#container {
+    width: 100vw;
+    height: 100vh;
+}
+
+.title {
+    font-size: 1.5rem;
+    font-weight: bold;
+    padding: 1rem;
+    text-align: center;
+    width: 100%;
+}
+
+.progress-bar-container {
+    background-color: #EAEAEF;
+    margin: auto;
+    margin-bottom: 1rem;
+    width: 80vw;
+    height: 1rem;
+}
+
+#progress-bar {
+    background-color: #0C5E98;
+    width: 0%;
+    height: 100%;
+}
+
+.buttons-container {
+    margin: auto;
+    margin-bottom: 1rem;
+    width: 80vw;
+    text-align: center;
+}
