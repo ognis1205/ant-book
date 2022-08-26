@@ -1,20 +1,28 @@
 document.addEventListener('DOMContentLoaded', () => {
+  const menu = Array.from(document.querySelector('#menulist').children);
+
+  const styles = Array.from(document.styleSheets);
+
   const reStyle = (index) => {
-    console.log('before: ', document.styleSheets);
     noStyles();
-    document.styleSheets[index].disabled = false;
-    console.log('after: ', document.styleSheets);
+    menu
+      .filter((style, i) => i === index)
+      .map((child) => child.classList.add('selected'));
+    styles
+      .filter((style, i) => i !== 0)
+      .filter((style, i) => i === index)
+      .map((style) => style.disabled = false);
   };
 
   const noStyles = () => {
-    console.log('before: ', document.styleSheets);
-    document.styleSheets[0].disabled = true;
-    document.styleSheets[1].disabled = true;
-    document.styleSheets[2].disabled = true;
-    document.styleSheets[3].disabled = true;
-    console.log('after: ', document.styleSheets);
+    menu
+      .map((child) => child.classList.remove('selected'));
+    styles
+      .filter((style, i) => i !== 0)
+      .map((style) => style.disabled = true);
   };
 
   window.reStyle = reStyle;
   window.noStyles = noStyles;
+  reStyle(0);
 });
