@@ -3,11 +3,54 @@
   <head>
     <meta charset="utf-8">
     <title>Basic</title>
-    <link rel="stylesheet" type="text/css" href="./styles/basic.css" />
+    <link rel="stylesheet" href="https://unpkg.com/ress/dist/ress.min.css" />
+    <link rel="stylesheet" type="text/css" href="./styles/A.css" />
     <script type="text/javascript" src="./scripts/index.js"></script>
   </head>
   <body>
     <div id="container">
+      <div id="header">
+        <h1>Welcome to My Homepage</h1>
+        <p>Use the menu to select different stylesheets</p>
+      </div>
+      <div id="content">
+        <div id="menubar">
+          <ul id="menulist">
+            <li class="menuitem" onclick="reStyle(0)">Stylesheet A</li>
+            <li class="menuitem" onclick="reStyle(1)">Stylesheet B</li>
+            <li class="menuitem" onclick="reStyle(2)">Stylesheet C</li>
+            <li class="menuitem" onclick="reStyle(3)">Stylesheet D</li>
+            <li class="menuitem" onclick="noStyle()">No Stylesheet</li>
+          </ul>
+        </div>
+        <div id="main">
+          <h1>Same Page Different Stylesheets</h1>
+          <p>
+            This is a demonstration of how different stylesheets can change the layout of your HTML page.
+            You can change the layout of this page by selecting different stylesheets in the menu,
+            or by selecting one of the following links:<br />
+            <a href="#" onclick="reStyle(0);return false">Stylesheet A</a>,
+            <a href="#" onclick="reStyle(1);return false">Stylesheet B</a>,
+            <a href="#" onclick="reStyle(2);return false">Stylesheet C</a>,
+            <a href="#" onclick="reStyle(3);return false">Stylesheet D</a>.
+          </p>
+          <h2>No Styles</h2>
+          <p>
+            This page uses DIV elements to group different sections of the HTML page.
+            Click here to see how the page looks like with no stylesheet:<br />
+            <a href="#" onclick="noStyles();return false">No Stylesheet</a>.
+          </p>
+        </div>
+        <div id="sidebar">
+          <h1>Side-Bar</h1>
+          <p>
+            Lorem ipsum dolor sit amet, consectetuer adipiscing elit, sed diam nonummy nibh euismod tincidunt ut laoreet dolore magna aliquam erat volutpat.
+          </p>
+        </div>
+      </div>
+      <div id="bottom">
+        Lorem ipsum dolor sit amet, consectetuer adipiscing elit, sed diam nonummy nibh euismod tincidunt ut laoreet dolore magna aliquam erat volutpat. Ut wisi enim ad minim veniam, quis nostrud exerci tation ullamcorper suscipit lobortis nisl ut aliquip ex ea commodo consequat. Duis autem vel eum iriure dolor in hendrerit in vulputate velit esse molestie consequat, vel illum dolore eu feugiat nulla facilisis at vero eros et accumsan et iusto odio dignissim qui blandit praesent luptatum zzril delenit augue duis dolore te feugait nulla facilisi.
+      </div>
     </div>
   </body>
 </html>
