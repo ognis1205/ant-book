@@ -9,7 +9,7 @@ body {
 }
 
 #container {
-    min-width: calc(500px - 2 * var(--maring));
+    min-width: 500px;
 }
 
 #content {
