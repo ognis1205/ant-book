@@ -35,9 +35,11 @@ document.addEventListener('DOMContentLoaded', () => {
     gridBox.style['grid-template-columns'] = `repeat(${cols}, 1fr)`;
 
     const table = getTable(rows, cols);
-    table.map((row) => {
-      row.map((num) => {
+    table.map((row, i) => {
+      row.map((num, j) => {
         const item = document.createElement('div');
+        item.style['justify-self'] = 'center';
+        item.style['align-self'] = 'center';
         item.classList.add('item');
         item.textContent = num;
         gridBox.appendChild(item);
