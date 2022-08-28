@@ -12,10 +12,12 @@
       <h1 class="title">
         ZigZag!
       </h1>
-      <form id="inputs" onsubmit="alert('stop submit'); return false;">
-        <input type="text" id="rows" name="rows" min="1" placeholder="rows"></input>
-        <input type="text" id="cols" name="cols" min="1" placeholder="cols"></input>
-        <input type="submit" value="Show Result"></input>
+      <form id="inputs">
+        <label for="rows">Rows</label>
+        <input type="number" id="rows" name="rows" min="1" value="1"></input>
+        <label for="rows">Cols</label>
+        <input type="number" id="cols" name="cols" min="1" value="1"></input>
+        <button>submit</button>
       </form>
       <div id="output">
       </div>

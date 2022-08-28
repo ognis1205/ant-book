@@ -27,20 +27,48 @@ body {
 #inputs input {
     border: solid 1px grey;
     border-radius: var(--radius);
-    width: 100%;
     margin: 0.5em 0em;
     padding: 0.5em 0.5em;
 }
 
-#inputs input[type=submit] {
-    color: white;
-    background-color: grey;
+#inputs label {
+    text-align: right;
+    clear: both;
+    float:left;
+    width: 64px;
+    margin: 0.5em 0em;
+    padding: 0.5em 0.5em;
 }
 
-#inputs input[type=submit]:hover {
+#inputs button {
+    display: block;
+    width: 100%;
+    clear: both;
+    color: white;
+    background-color: grey;
+    margin: 0.5em 0em;
+    padding: 0.5em 0.5em;
+}
+
+#inputs button:hover {
     background-color: #444444;
 }
 
-#inputs input[type=submit]:active {
+#inputs button:active {
     background-color: black;
+}
+
+#output {
+    margin: auto;
+}
+
+#output .grid {
+    margin: auto;
+}
+
+#output .grid .item {
+    text-align: center;
+    width: 2rem;
+    margin: 0.5em 0.5em;
+    padding: 0.5em 0.5em;
 }

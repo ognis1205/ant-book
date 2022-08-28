@@ -1,18 +1,50 @@
-document.addEventListner('DOMContentLoaded', () => {
-   const table = (row, col) => {
+document.addEventListener('DOMContentLoaded', () => {
+  const output = document.querySelector('#output');
+
+  const getTable = (row, col) => {
+    console.log(row, col);
     const ret = [];
 
-    for (const i in Array(row).keys()) {
+    for (let i = 0; i < col; i++) {
       const newRow = [];
-      for (const j in Array(col).keys()) {
-        if (row % 2 === 0) newRow.push(row * i + j + 1);
-        else newRow.unshift(row * i + j + 1);
+      for (let j = 0; j < row; j++) {
+        if (i % 2 == 0) newRow.push(row * i + j);
+        else newRow.unshift(row * i + j);
       }
       ret.push(newRow);
     }
 
-    return ret[0].map((_, i) => arr.map((r) => r[i]));
+    return ret[0].map((_, i) => ret.map((r) => r[i]));
   };
 
-  window.table = table;
+  const removeAllChildNodes = (parent) => {
+    while (parent.firstChild) {
+      parent.removeChild(parent.firstChild);
+    }
+  };
+
+  document.getElementById('inputs').onsubmit = (e) => {
+    const data = new FormData(e.target)
+    const rows = data.get('rows');
+    const cols = data.get('cols');
+
+    removeAllChildNodes(output);
+    const gridBox = document.createElement('div');
+    gridBox.classList.add('grid');
+    gridBox.style['display'] = 'grid';
+    gridBox.style['grid-template-columns'] = `repeat(${cols}, 1fr)`;
+
+    const table = getTable(rows, cols);
+    table.map((row) => {
+      row.map((num) => {
+        const item = document.createElement('div');
+        item.classList.add('item');
+        item.textContent = num;
+        gridBox.appendChild(item);
+      });
+    });
+    output.appendChild(gridBox);
+
+    return false;
+  };
 });
