@@ -38,8 +38,7 @@ document.addEventListener('DOMContentLoaded', () => {
     table.map((row, i) => {
       row.map((num, j) => {
         const item = document.createElement('div');
-        item.style['justify-self'] = 'center';
-        item.style['align-self'] = 'center';
+        item.style['opacity'] = `${1 - 3 * (num + 1) / (4 * rows * cols)}`;
         item.classList.add('item');
         item.textContent = num;
         gridBox.appendChild(item);
