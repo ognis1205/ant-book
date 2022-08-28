@@ -1,0 +1,46 @@
+:root {
+    --radius: 4px;
+}
+
+body {
+    font: 100% Lucida Sans, Verdana;
+}
+
+.container {
+    width: 80vw;
+    margin: auto;
+}
+
+.title {
+    background-color: #04AA6D;
+    color: #ffffff;
+    text-align: center;
+    padding: 0.5em 0.5em;
+}
+
+#inputs {
+    margin: auto;
+    text-align: center;
+    width: 25vw;
+}
+
+#inputs input {
+    border: solid 1px grey;
+    border-radius: var(--radius);
+    width: 100%;
+    margin: 0.5em 0em;
+    padding: 0.5em 0.5em;
+}
+
+#inputs input[type=submit] {
+    color: white;
+    background-color: grey;
+}
+
+#inputs input[type=submit]:hover {
+    background-color: #444444;
+}
+
+#inputs input[type=submit]:active {
+    background-color: black;
+}

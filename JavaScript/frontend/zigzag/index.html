@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>zigzag</title>
+    <link rel="stylesheet" href="https://unpkg.com/ress/dist/ress.min.css" />
+    <link rel="stylesheet" type="text/css" href="./styles/main.css"></link>
+    <script type="text/javascript" src="./scripts/index.js"></script>
+  </head>
+  <body>
+    <div class="container">
+      <h1 class="title">
+        ZigZag!
+      </h1>
+      <form id="inputs" onsubmit="alert('stop submit'); return false;">
+        <input type="text" id="rows" name="rows" min="1" placeholder="rows"></input>
+        <input type="text" id="cols" name="cols" min="1" placeholder="cols"></input>
+        <input type="submit" value="Show Result"></input>
+      </form>
+      <div id="output">
+      </div>
+    </div>
+  </body>
+</html>
