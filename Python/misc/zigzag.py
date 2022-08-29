@@ -35,15 +35,15 @@ INPUT = dedent('''\
 def main():
     with UserInput(INPUT) as user_input:
         n = user_input.readline(parse=int)
-        l = 1
         w = len(str(n - 1))
         xs = [x for x in range(n)]
+        row = 1
         while len(xs) > 0:
-            hs, xs = xs[:l], xs[l:]
-            if l % 2 == 0:
+            hs, xs = xs[:row], xs[row:]
+            if row % 2 == 0:
                 hs.reverse()
-            print(f'{" * ".join(map(lambda h: str(h).rjust(w), hs))}')
-            l += 1
+            print(f'{" * ".join(map(lambda h: str(h).rjust(w), hs)).rjust(w * row + 3 * (row - 1))}')
+            row += 1
 
 
 if __name__ == '__main__':
