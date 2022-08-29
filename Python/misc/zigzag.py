@@ -1,6 +1,7 @@
 import sys
 from io import StringIO
 from re import split
+from textwrap import dedent
 from traceback import format_exc
 
 
@@ -26,8 +27,13 @@ class UserInput:
         return None
 
 
+INPUT = dedent('''\
+100
+''')
+
+
 def main():
-    with UserInput() as user_input:
+    with UserInput(INPUT) as user_input:
         n = user_input.readline(parse=int)
         l = 1
         w = len(str(n - 1))
@@ -36,7 +42,7 @@ def main():
             hs, xs = xs[:l], xs[l:]
             if l % 2 == 0:
                 hs.reverse()
-            print(f'{"*".join(map(lambda h: str(h).center(w), hs))}')
+            print(f'{" * ".join(map(lambda h: str(h).rjust(w), hs))}')
             l += 1
 
 
