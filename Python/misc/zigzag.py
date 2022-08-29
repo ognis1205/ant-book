@@ -28,7 +28,7 @@ class UserInput:
 
 
 INPUT = dedent('''\
-100
+101
 ''')
 
 
@@ -42,7 +42,10 @@ def main():
             hs, xs = xs[:row], xs[row:]
             if row % 2 == 0:
                 hs.reverse()
-            print(f'{" * ".join(map(lambda h: str(h).rjust(w), hs)).rjust(w * row + 3 * (row - 1))}')
+            line = " * ".join(map(lambda h: str(h).rjust(w), hs))
+            if row % 2 == 0:
+                line = line.rjust(w * row + 3 * (row - 1))
+            print(f'{line}')
             row += 1
 
 
