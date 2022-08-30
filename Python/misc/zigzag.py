@@ -28,7 +28,7 @@ class UserInput:
 
 
 INPUT = dedent('''\
-101
+111
 ''')
 
 
