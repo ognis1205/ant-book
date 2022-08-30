@@ -1,0 +1,3 @@
+include flaskr/schema.sql
+recursive-include flaskr/templates *
+recursive-include flaskr/static *
