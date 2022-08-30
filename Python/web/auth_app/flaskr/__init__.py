@@ -1,5 +1,30 @@
-__version_info__ = (1, 0, 0)
+import os
+from dotenv import load_dotenv
+from flask import Flask
+from flaskr.database import init_db
 
-__version__ = '.'.join(map(str, __version_info__))
 
-VERSION = __version__
+load_dotenv(override=True)
+
+config = {
+    'development':  'flaskr.config.Development',
+    'testing': 'flaskr.config.Testing',
+    'production': 'flaskr.config.Production',
+}
+
+
+def create_app():
+    app = Flask(__name__, instance_relative_config=True)
+    app.config.from_object(config.get(os.getenv('FLASK_APP_ENV', 'development')))
+    init_db(app)
+
+    try:
+        os.makedirs(app.instance_path)
+    except OSError:
+        pass
+
+    @app.route('/hello')
+    def hello():
+        return 'Hello, World!'
+
+    return app
