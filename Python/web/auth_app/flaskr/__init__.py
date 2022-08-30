@@ -1,7 +1,7 @@
 import os
 from dotenv import load_dotenv
 from flask import Flask
-from flaskr.database import init_db
+from flaskr.models import init_db
 
 
 load_dotenv(override=True)
@@ -14,7 +14,12 @@ config = {
 
 
 def create_app():
-    app = Flask(__name__, instance_relative_config=True)
+    app = Flask(
+        __name__,
+        instance_relative_config=True,
+        static_folder='static',
+        template_folder='templates',
+    )
     app.config.from_object(config.get(os.getenv('FLASK_APP_ENV', 'development')))
     init_db(app)
 
@@ -23,8 +28,10 @@ def create_app():
     except OSError:
         pass
 
-    @app.route('/hello')
-    def hello():
-        return 'Hello, World!'
+    from flaskr.routers.auth import bp as auth_blueprint
+    app.register_blueprint(auth_blueprint)
+
+    from flaskr.routers.main import bp as main_blueprint
+    app.register_blueprint(main_blueprint)
 
     return app
