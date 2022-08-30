@@ -12,4 +12,4 @@ def index():
 
 @bp.route('/profile')
 def profile():
-    return 'Profile'
+    return render_template('main/profile.html')
