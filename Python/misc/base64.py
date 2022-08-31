@@ -46,9 +46,9 @@ def from_bin(seq):
     while len(seq) >= 8:
         if seq.startswith('1111'):
             b, seq = seq[:32], seq[32:]
-        elif seq.startswith('111'):
+        elif seq.startswith('1110'):
             b, seq = seq[:24], seq[24:]
-        elif seq.startswith('11'):
+        elif seq.startswith('1100'):
             b, seq = seq[:16], seq[16:]
         else:
             b, seq = seq[:8], seq[8:]
