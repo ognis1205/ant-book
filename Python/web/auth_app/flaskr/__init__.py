@@ -1,7 +1,8 @@
 import os
 from dotenv import load_dotenv
 from flask import Flask
-from flaskr.models import init_db
+from flaskr.models import init_db, User
+from flaskr.models.user import User
 
 
 load_dotenv(override=True)
