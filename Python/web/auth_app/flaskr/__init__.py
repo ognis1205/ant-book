@@ -1,6 +1,7 @@
 import os
 from dotenv import load_dotenv
 from flask import Flask
+from flask_login import LoginManager
 from flaskr.models import init_db, User
 from flaskr.models.user import User
 
@@ -23,6 +24,14 @@ def create_app():
     )
     app.config.from_object(config.get(os.getenv('FLASK_APP_ENV', 'development')))
     init_db(app)
+
+    login_manager = LoginManager()
+    login_manager.login_view = 'auth.login'
+    login_manager.init_app(app)
+
+    @login_manager.user_loader
+    def load_user(user_id):
+        return User.query.get(int(user_id))
 
     try:
         os.makedirs(app.instance_path)

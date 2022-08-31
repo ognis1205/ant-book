@@ -1,5 +1,6 @@
 import os
-from flask import Blueprint, render_template, redirect, url_for, request, flash
+from flask import Blueprint, render_template, redirect, url_for, request, flash, session
+from flask_login import login_user, logout_user, login_required
 from werkzeug.security import generate_password_hash, check_password_hash
 from flaskr.models import db
 from flaskr.models.user import User
@@ -42,8 +43,10 @@ def signup_post():
 
 
 @bp.route('/logout')
+@login_required
 def logout():
-    return 'Logout'
+    logout_user()
+    return redirect(url_for('main.index'))
 
 
 @bp.route('/login', methods=['POST'])
@@ -56,5 +59,8 @@ def login_post():
     if not user or not check_password_hash(user.password, password):
         flash('Please check your login details and try again.')
         return redirect(url_for('auth.login'))
+
+    login_user(user, remember=remember)
+    session.permanent = True
 
     return redirect(url_for('main.profile'))
