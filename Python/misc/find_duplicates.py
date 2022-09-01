@@ -39,14 +39,12 @@ def main():
             delimiter=r'\s*,\s*',
             parse=int
         )
-        print(f'test: {xs}')
         l = len(xs)
         for i in range(l):
             x = xs[i] % l
             xs[x] += l
         for i in range(l):
-            if xs[i] >= l * 2:
-                print(f'{xs[i] % l}')
+            print(f'{xs[i] % l}') if xs[i] >= l * 2 else ...
 
 
 if __name__ == '__main__':
