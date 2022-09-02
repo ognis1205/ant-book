@@ -39,6 +39,7 @@ def main():
             delimiter=r'\s*,\s*',
             parse=int
         )
+        print(f'input: {xs}')
         l = len(xs)
         for i in range(l):
             xs[xs[i] % l] += l
