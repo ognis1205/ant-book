@@ -41,8 +41,7 @@ def main():
         )
         l = len(xs)
         for i in range(l):
-            x = xs[i] % l
-            xs[x] += l
+            xs[xs[i] % l] += l
         for i in range(l):
             print(f'{xs[i] % l}') if xs[i] >= l * 2 else ...
 
