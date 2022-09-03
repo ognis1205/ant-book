@@ -4,9 +4,9 @@ from flaskr.config.development import Development
 
 def getconf(key):
     return {
-        'development':  'flaskr.config.Development',
-        'testing': 'flaskr.config.Testing',
-        'production': 'flaskr.config.Production',
+        'dev':  'flaskr.config.Development',
+        'test': 'flaskr.config.Testing',
+        'prod': 'flaskr.config.Production',
     }.get(key, 'flaskr.config.Development')
 
 
