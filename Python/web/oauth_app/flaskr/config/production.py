@@ -2,8 +2,8 @@ from datetime import timedelta
 from flaskr.config.utils import get_env, rand_str
 
 
-class Development:
-    DEBUG = True
+class Production:
+    DEBUG = False
     SECRET_KEY = rand_str(64)
     SQLALCHEMY_DATABASE_URI = get_env('SQLALCHEMY_DATABASE_URI')
     SQLALCHEMY_TRACK_MODIFICATIONS = False

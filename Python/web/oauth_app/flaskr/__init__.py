@@ -1,7 +1,7 @@
 import os
 from flask import Flask
-from flaskr.config import getenv, getconf
-from flaskr.models import get_db
+from flaskr.config.utils import get_env, get_conf
+from flaskr.models.utils import init_db
 
 
 def create_app():
@@ -12,10 +12,11 @@ def create_app():
         template_folder='templates',
     )
 
-    app.config.from_object(getconf(getenv('FLASK_APP_ENV')))
-    with app.app_context():
-        db = get_db()
-        db.init_app(app)
+    app.config.from_object(
+        get_conf(get_env('FLASK_APP_ENV', default='development'))
+    )
+
+    init_db(app)
 
     try:
         os.makedirs(app.instance_path)

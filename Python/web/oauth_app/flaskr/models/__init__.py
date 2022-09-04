@@ -1,8 +1,6 @@
-from flask import Flask, g
-from flask_sqlalchemy import SQLAlchemy
+from flaskr.models.user import User
 
 
-def get_db():
-    if 'db' not in g:
-        g.db = SQLAlchemy()
-    return g.db
+__all__ = [
+    "User",
+]
