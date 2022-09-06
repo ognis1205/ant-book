@@ -39,19 +39,12 @@ def create_app():
 
     @login_manager.user_loader
     def user_loader(user_id):
-        return User.query.get(int(user_id))
+        return User.query.get(user_id)
 
     from flaskr.routers.main import bp as main_blueprint
     app.register_blueprint(main_blueprint)
 
     from flaskr.routers.auth import bp as auth_blueprint
     app.register_blueprint(auth_blueprint)
-
-    serving.run_simple(
-        app.config['HOSTNAME'],
-        app.config['PORT'],
-        app,
-        ssl_context=app.config['SSL_CONTEXT']
-    )
 
     return app

@@ -20,18 +20,18 @@ def callback():
     userinfo = get_userinfo()
 
     if userinfo.get('email_verified'):
-        unique_id = userinfo.get('sub')
-        users_email = userinfo.get('email')
+        id = userinfo.get('sub')
+        email = userinfo.get('email')
         picture = userinfo.get('picture')
-        users_name = userinfo.get('given_name')
+        name = userinfo.get('given_name')
     else:
         return 'User email not available or not verified by Google.', 400
 
     user = User(
-        id_=unique_id, name=users_name, email=users_email, profile_pic=picture
+        id=id, name=name, email=email, thumbnail=picture
     )
 
-    if not User.query.get(int(unique_id)):
+    if not User.query.get(id):
         db.session.add(user)
         db.session.commit()
 

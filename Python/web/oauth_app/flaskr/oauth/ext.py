@@ -24,7 +24,7 @@ def redirect_authorize(redirect_uri):
 
 def get_userinfo():
     token = oauth.google.authorize_access_token()
-    return oauth.google.parse_id_token(token)
+    return token['userinfo']
 
 
 def external_url_for(*args, **kwargs):

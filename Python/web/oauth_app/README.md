@@ -17,5 +17,5 @@
 ### Run the Project
 
 ```bash
- $ flask --app flaskr run
+ $ flask --app flaskr run --cert=adhoc
 ```

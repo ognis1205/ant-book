@@ -5,7 +5,7 @@ from flaskr.config.utils import getenv, rand_str
 class Development:
     DEBUG = True
     HOSTNAME = '0.0.0.0'
-    PORT = 443
+    PORT = 5000
     SSL_CONTEXT = 'adhoc'
     SECRET_KEY = rand_str(64)
     SQLALCHEMY_DATABASE_URI = getenv('SQLALCHEMY_DATABASE_URI')
