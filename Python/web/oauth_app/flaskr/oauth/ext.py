@@ -15,6 +15,7 @@ def redirect_authorize(redirect_uri):
         client_id=getenv('GOOGLE_CLIENT_ID'),
         client_secret=getenv('GOOGLE_CLIENT_SECRET'),
         server_metadata_url=getenv('GOOGLE_DISCOVERY_URL'),
+        prompt='consent',
         client_kwargs={
             'scope': 'openid email profile'
         }

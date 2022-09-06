@@ -1,5 +1,5 @@
-from flask import Blueprint, redirect, url_for
-from flask_login import login_user, logout_user
+from flask import Blueprint, redirect, url_for, session
+from flask_login import login_user, logout_user, login_required, current_user
 from flaskr.models import User
 from flaskr.oauth.ext import redirect_authorize, get_userinfo, external_url_for
 from flaskr.models.ext import db
@@ -37,4 +37,15 @@ def callback():
 
     login_user(user)
 
+    return redirect(url_for('main.index'))
+
+
+@bp.route('/logout')
+@login_required
+def logout():
+    user = User.query.get(current_user.get_id())
+    logout_user()
+    db.session.delete(user)
+    db.session.commit()
+    session.clear()
     return redirect(url_for('main.index'))
