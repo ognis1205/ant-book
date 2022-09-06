@@ -47,6 +47,11 @@ def create_app():
     from flaskr.routers.auth import bp as auth_blueprint
     app.register_blueprint(auth_blueprint)
 
-    serving.run_simple('0.0.0.0', 443, app, ssl_context='adhoc')
+    serving.run_simple(
+        app.config['HOSTNAME'],
+        app.config['PORT'],
+        app,
+        ssl_context=app.config['SSL_CONTEXT']
+    )
 
     return app

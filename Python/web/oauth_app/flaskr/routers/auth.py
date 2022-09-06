@@ -1,7 +1,7 @@
-from flask import Blueprint, redirect, request, url_for
+from flask import Blueprint, redirect, url_for
 from flask_login import login_user, logout_user
 from flaskr.models import User
-from flaskr.oauth.ext import redirect_authorize, get_userinfo
+from flaskr.oauth.ext import redirect_authorize, get_userinfo, external_url_for
 from flaskr.models.ext import db
 
 
@@ -10,7 +10,9 @@ bp = Blueprint('auth', __name__)
 
 @bp.route('/login')
 def login():
-    return redirect_authorize(url_for('auth.callback', _external=True))
+    return redirect_authorize(
+        external_url_for('auth.callback', _external=True, _scheme='https')
+    )
 
 
 @bp.route('/login/callback')
