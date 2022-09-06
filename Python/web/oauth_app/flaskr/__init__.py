@@ -1,10 +1,10 @@
 import os
+from datetime import timedelta
 from flask import Flask, g, session
 from flask_login import LoginManager
-from oauthlib.oauth2 import WebApplicationClient
+from werkzeug import serving
 from flaskr.models import User
-from flaskr.config.utils import get_env, get_conf
-from flaskr.models.utils import init_db
+from flaskr.config.utils import getenv, config
 
 
 def create_app():
@@ -14,32 +14,39 @@ def create_app():
         static_folder='static',
         template_folder='templates',
     )
+
     app.config.from_object(
-        get_conf(get_env('FLASK_APP_ENV', default='development'))
+        config(getenv('FLASK_APP_ENV', default='development'))
     )
-
-
-    login_manager = LoginManager()
-    login_manager.init_app(app)
-
-    init_db(app)
-
-    try:
-        os.makedirs(app.instance_path)
-    except OSError:
-        pass
-
-    @login_manager.user_loader
-    def user_loader(user_id):
-        return User.query.get(int(user_id))
-
-    with app.app_context():
-        g.oauth_client = WebApplicationClient(GOOGLE_CLIENT_ID)
 
     @app.before_request
     def before_request():
         session.permanent = True
         app.permanent_session_lifetime = timedelta(minutes=15)
         session.modified = True
+
+    try:
+        os.makedirs(app.instance_path)
+    except OSError:
+        pass
+
+    from flaskr.oauth.ext import oauth, login_manager
+    oauth.init_app(app)
+    login_manager.init_app(app)
+
+    from flaskr.models.ext import db
+    db.init_app(app)
+
+    @login_manager.user_loader
+    def user_loader(user_id):
+        return User.query.get(int(user_id))
+
+    from flaskr.routers.main import bp as main_blueprint
+    app.register_blueprint(main_blueprint)
+
+    from flaskr.routers.auth import bp as auth_blueprint
+    app.register_blueprint(auth_blueprint)
+
+    serving.run_simple('0.0.0.0', 443, app, ssl_context='adhoc')
 
     return app

@@ -8,11 +8,11 @@ from dotenv import load_dotenv
 load_dotenv(Path(__file__).parent / '.env')
 
 
-def get_env(key, default=None):
+def getenv(key, default=None):
     return os.getenv(key, default=default)
 
 
-def get_conf(key):
+def config(key):
     return {
         'dev':  'flaskr.config.development.Development',
         'test': 'flaskr.config.testing.Testing',
