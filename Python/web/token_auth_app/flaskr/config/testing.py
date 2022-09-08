@@ -6,6 +6,7 @@ class Testing:
     DEBUG = True
     SECRET_KEY = randstr(64)
     JWT_SECRET_KEY = randstr(64)
+    JWT_ACCESS_TOKEN_EXPIRES = timedelta(seconds=5)
     SESSION_COOKIE_SECURE = False,
     SESSION_COOKIE_HTTPONLY = False,
     PERMANENT_SESSION_LIFETIME = timedelta(minutes=5)

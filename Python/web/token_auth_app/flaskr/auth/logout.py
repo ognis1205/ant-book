@@ -10,7 +10,7 @@ class Logout(MethodView):
     def post(self):
         header = request.headers.get('Authorization')
 
-        if token := split('\s+', header) if header else None:
+        if token := split('\s+', header)[1] if header else None:
             try:
                 _ = decode_token(token)
                 blacklist = Blacklist(token=token)
@@ -24,7 +24,7 @@ class Logout(MethodView):
                 return make_response(jsonify(
                     status='fail',
                     message=f'{type(e).__name__}, {e}',
-                )), 200
+                )), 401
 
         return make_response(jsonify(
             status='fail',
