@@ -1,4 +1,5 @@
 import pytest
+from datetime import datetime
 from flaskr import create_app
 from flaskr.models import User
 from flaskr.models.ext import db
@@ -36,5 +37,7 @@ def test_encode_auth_token(app):
         )
         db.session.add(user)
         db.session.commit()
-        token = user.encode_auth_token(user.id)
-        assert isinstance(token, str) == True
+
+        assert user.id == 1
+        assert user.is_admin == False
+        assert isinstance(user.registered_on, datetime) == True
