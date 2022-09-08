@@ -13,4 +13,7 @@ def create_app():
         getconf(getenv('FLASK_APP_ENV', default='development'))
     )
 
+    from flaskr.models.ext import db
+    db.init_app(app)
+
     return app
