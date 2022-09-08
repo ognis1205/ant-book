@@ -9,13 +9,12 @@
 ### Configuring the Database
 
 ```bash
- $ flask --app flaskr shell
->>> from flaskr.models import db
->>> db.create_all()
+ $ flask --app=flaskr db init
+ $ flask --app=flaskr db migrate
 ```
 
 ### Run the Project
 
 ```bash
- $ flask --app flaskr run
+ $ flask --app=flaskr run
 ```

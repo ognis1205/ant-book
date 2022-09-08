@@ -13,7 +13,12 @@ def create_app():
         getconf(getenv('FLASK_APP_ENV', default='development'))
     )
 
-    from flaskr.models.ext import db
+    from flaskr.apis.ext import cors
+    cors.init_app(app)
+
+    from flaskr.models.ext import db, bcrypt, migrate
     db.init_app(app)
+    bcrypt.init_app(app)
+    migrate.init_app(app, db)
 
     return app
