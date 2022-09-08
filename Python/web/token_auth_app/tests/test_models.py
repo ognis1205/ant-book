@@ -1,9 +1,8 @@
 import pytest
 from datetime import datetime
 from flaskr import create_app
-from flaskr.models import User
+from flaskr.models import User, Blacklist
 from flaskr.models.ext import db
-from flaskr.config.utils import getconf
 
 
 @pytest.fixture()
@@ -29,7 +28,7 @@ def runner(app):
     return app.test_cli_runner()
 
 
-def test_encode_auth_token(app):
+def test_user(app):
     with app.app_context():
         user = User(
             email='test@test.com',
@@ -41,3 +40,17 @@ def test_encode_auth_token(app):
         assert user.id == 1
         assert user.is_admin == False
         assert isinstance(user.registered_on, datetime) == True
+
+
+def test_blacklist(app):
+    with app.app_context():
+        blacklist = Blacklist(
+            token='token',
+        )
+        db.session.add(blacklist)
+        db.session.commit()
+
+        assert blacklist.id == 1
+        assert blacklist.token == 'token'
+        assert isinstance(blacklist.registered_on, datetime) == True
+        assert Blacklist.check('token') == True

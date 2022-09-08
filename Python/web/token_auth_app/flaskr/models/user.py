@@ -1,4 +1,3 @@
-import jwt
 from datetime import datetime, timedelta
 from flask import current_app
 from flaskr.models.ext import db, bcrypt
