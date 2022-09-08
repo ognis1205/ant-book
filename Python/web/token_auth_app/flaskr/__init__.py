@@ -10,7 +10,7 @@ def create_app():
     )
 
     app.config.from_object(
-        getconf(getenv('FLASK_APP_ENV', default='development'))
+        getconf(getenv('FLASK_APP_ENV', default='dev'))
     )
 
     from flaskr.apis.ext import cors

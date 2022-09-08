@@ -1,4 +1,5 @@
-from datetime import datetime
+import jwt
+from datetime import datetime, timedelta
 from flask import current_app
 from flaskr.models.ext import db, bcrypt
 
@@ -28,3 +29,18 @@ class User(db.Model):
         ).decode()
         self.registered_on = datetime.now()
         self.is_admin = is_admin
+
+    def encode_auth_token(self, user_id):
+        try:
+            payload = {
+                'exp': datetime.utcnow() + timedelta(days=0, seconds=5),
+                'iat': datetime.utcnow(),
+                'sub': user_id
+            }
+            return jwt.encode(
+                payload,
+                current_app.config.get('SECRET_KEY'),
+                algorithm='HS256'
+            )
+        except Exception as e:
+            return e
