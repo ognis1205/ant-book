@@ -23,4 +23,7 @@ def create_app():
     from flaskr.apis.auth import bp as auth_blueprint
     app.register_blueprint(auth_blueprint)
 
+    from flaskr.apis.dashboard import bp as dashboard_blueprint
+    app.register_blueprint(dashboard_blueprint)
+
     return app
