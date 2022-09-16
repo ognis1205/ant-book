@@ -1,8 +1,123 @@
-.header {
-    position: fixed;
-    height:
+:root {
+    --font-famlity-primary: 'Be Vietnam Pro', sans-serif;
+    --font-family-body: var(--font-famlity-primary);
+    --font-family-heading: var(--font-famlity-primary);
+
+    --color-primary-900: #05386B;
+    --color-primary-700: #379683;
+    --color-primary-500: #5CDB95;
+    --color-primary-300: #8EE4AF;
+    --color-primary-100: #EDF5E1;
+
+    --font-weight-bold: 700;
+    --font-weight-semi-bold: 500;
+    --font-weight-regular: 300;
+
+    --font-size-100: 0.75rem;
+    --font-size-300: 0.8125rem;
+    --font-size-500: 0.9375rem;
+    --font-size-700: 1.875rem;
+    --font-size-900: 3.5rem;
+
+    --size-100: 0.25rem;
+    --size-300: 0.75rem;
+    --size-500: 1.5rem;
+    --size-700: 3rem;
+    --size-900: 5rem;
 }
 
-.main {
-    padding-top:
+* {
+    font-family: var(--font-family-heading);
+}
+
+header {
+    color: var(--color-primary-900);
+    background-color: var(--color-primary-500);
+    position: fixed;
+    width: 100%;
+    padding: var(--size-500);
+}
+
+.navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: var(--font-size-700);
+}
+
+.navbar a {
+    color: inherit;
+    text-decoration: none;
+}
+
+.navbar a:hover {
+    opacity: 0.75;
+}
+
+.nav-links {
+    display: flex;
+    gap: var(--size-500);
+}
+
+main {
+    color: var(--color-primary-100);
+    background-color: var(--color-primary-500);
+    height: 100vh;
+    padding-block: var(--size-900);
+}
+
+.container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--size-900);
+}
+
+#search-button {
+    display: inline-block;
+    border: none;
+    font-weight: 700;
+    font-size: var(--font-size-700);
+    color: var(--color-primary-100);
+    background-color: var(--color-primary-900);
+    padding: 0.5em 2.5em;
+}
+
+#search-button:hover {
+    opacity: 0.75;
+}
+
+#search-button:active {
+    opacity: 1;
+}
+
+#search-button .loading {
+    width: var(--font-size-900);
+    height: var(--font-size-900);
+    border-radius: 50%;
+    border: 0.3em solid rgb(0, 0, 0, 0.2);
+    border-right-color: var(--color-primary-100);
+    animation: loading-animation 2s linear infinite;
+}
+
+#search-button .loading * {
+    display: none;
+}
+
+@keyframes loading-animation {
+    0% {
+	transform: rotate(0deg);
+    }
+    100% {
+	transform: rotate(360deg);
+    }
+}
+
+@media (min-width: 50em) {
+    :root {
+	--font-size-body: var(--font-size-500);
+	--font-size-primary-heading: var(--font-size-900);
+	--font-size-secondary-heading: var(--font-size-800);
+	--font-size-nav: var(--font-size-300);
+    }
 }
