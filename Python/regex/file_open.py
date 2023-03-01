@@ -45,13 +45,15 @@ input
 def main():
     with Reader(file=StringIO(INPUT)) as r:
         print(f'{r.readline()}')
-        print(f'{r.readline()}')
-        print(f'{r.readline()}')
+        print(f'{r.readline(parse=int)}')
+        print(f'{r.readline(parse=int, isarray=True)}')
+        print(f'{r.readline(isarray=True)}')
 
     with open('test.txt', 'r') as f, Reader(file=f) as r:
         print(f'{r.readline()}')
-        print(f'{r.readline()}')
-        print(f'{r.readline()}')
+        print(f'{r.readline(parse=int)}')
+        print(f'{r.readline(parse=int, isarray=True)}')
+        print(f'{r.readline(isarray=True)}')
 
 
 if __name__ == '__main__':
