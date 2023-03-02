@@ -7,11 +7,6 @@ class Node:
         self.count = count
         self.children = {}
 
-    def insert(self, c):
-        new_node = Node()
-        self.children[c] = new_node
-        return new_node
-
     def __str__(self):
         return f'Node("{self.value}", {self.count})'
 
