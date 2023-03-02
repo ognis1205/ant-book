@@ -46,5 +46,4 @@ if __name__ == '__main__':
     trie = Trie()
     while line := sys.stdin.readline():
         trie.insert(line.strip())
-    queried = trie.query('w')
-    print(str(queried))
+    print(trie.query('wh'))
