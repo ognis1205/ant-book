@@ -3,9 +3,9 @@ def lps(patt):
     for i in range(1, len(patt)):
         if patt[i] == patt[l]:
             l += 1
-            ret[i] = l
         else:
             l = 0
+        ret[i] = l
     return ret
 
 
