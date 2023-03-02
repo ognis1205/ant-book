@@ -18,10 +18,10 @@ def kmp(text, patt):
             if j == len(patt):
                 ret.append(i - j)
                 j = table[j - 1]
+        elif j == 0:
+            i += 1
         else:
-            j = table[j - 1]
-            if j == 0:
-                i += 1
+            j = table[j]
     return ret
 
 
